@@ -2,7 +2,7 @@
   "name": "facs-spring-frontend",
   "version": "0.0.1",
   "private": true,
-  "description": "Tailwind CSS build for the facs-spring Thymeleaf templates.",
+  "description": "Tailwind CSS build for the facs-spring JSP views.",
   "scripts": {
     "dev": "tailwindcss -i ./src/main/tailwind/app.css -o ./src/main/resources/static/css/app.css --watch",
     "build": "tailwindcss -i ./src/main/tailwind/app.css -o ./src/main/resources/static/css/app.css --minify"
