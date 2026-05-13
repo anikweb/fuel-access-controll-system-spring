@@ -1,6 +1,6 @@
 package com.invisible.facs.config;
 
-import com.invisible.facs.storage.StorageProperties;
+import com.invisible.facs.config.StorageProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
