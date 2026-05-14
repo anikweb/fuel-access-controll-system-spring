@@ -1,15 +1,6 @@
 package com.invisible.facs.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Index;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -19,10 +10,7 @@ import lombok.Setter;
 import java.time.Instant;
 
 @Entity
-@Table(name = "otp_challenges", indexes = {
-        @Index(name = "ix_otp_mobile_purpose_consumed",
-                columnList = "mobile, purpose, consumed_at")
-})
+@Table(name = "otp_challenges")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -34,14 +22,13 @@ public class OtpChallenge {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "mobile", nullable = false, length = 32)
+    @Column(name = "mobile", nullable = false, length = 14)
     private String mobile;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "purpose", nullable = false, length = 32)
     private OtpPurpose purpose;
 
-    // OTP code (plaintext — short-lived).
     @Column(name = "code", nullable = false, length = 100)
     private String code;
 
@@ -60,5 +47,10 @@ public class OtpChallenge {
     @PrePersist
     void onCreate() {
         if (createdAt == null) createdAt = Instant.now();
+    }
+
+    @PreUpdate
+    void onUpdate() {
+        if (consumedAt == null) consumedAt = Instant.now();
     }
 }
