@@ -16,20 +16,18 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        // Strength 12 is a sensible 2026 default (~250ms per hash on commodity hardware).
-        // Existing hashes encoded with a different strength still verify fine.
         return new BCryptPasswordEncoder(12);
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .authorizeHttpRequests(auth -> auth
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception
+    {
+        http.authorizeHttpRequests(auth->auth
                         .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.INCLUDE).permitAll()
                         .requestMatchers("/", "/forgot-password", "/verify-otp", "/verify-otp/**", "/reset-password", "/reset-password/**", "/signup", "/signup/**", "/css/**", "/js/**", "/img/**", "/uploads/**", "/error", "/favicon.ico").permitAll()
                         .anyRequest().authenticated())
                 .csrf(Customizer.withDefaults())
-                .formLogin(form -> form
+                .formLogin(form->form
                         .loginPage("/")
                         .loginProcessingUrl("/signin")
                         .usernameParameter("mobile")
@@ -37,7 +35,7 @@ public class SecurityConfig {
                         .defaultSuccessUrl("/dashboard", true)
                         .failureUrl("/?error")
                         .permitAll())
-                .logout(logout -> logout
+                .logout(logout->logout
                         .logoutUrl("/logout")
                         .logoutSuccessUrl("/")
                         .invalidateHttpSession(true)

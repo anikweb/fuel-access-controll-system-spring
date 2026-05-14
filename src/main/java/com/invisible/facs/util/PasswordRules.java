@@ -1,9 +1,5 @@
 package com.invisible.facs.util;
 
-/**
- * Single source of truth for password requirements. Used by SecurityForm (signup)
- * and UserService (password reset) so both flows enforce the same rule.
- */
 public final class PasswordRules {
 
     public static final int MIN_LENGTH = 8;
