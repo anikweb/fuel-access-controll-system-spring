@@ -9,6 +9,7 @@ import com.invisible.facs.model.Vehicle;
 import com.invisible.facs.repository.UserRepository;
 import com.invisible.facs.util.BanglaDigits;
 import com.invisible.facs.util.MobileNumbers;
+import com.invisible.facs.util.VehicleOptions;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -55,6 +56,8 @@ public class RegistrationService {
         model.addAttribute("currentIndex", currentIndex);
         model.addAttribute("draft", buildDraftMap(session));
         model.addAttribute("errors", new HashMap<String, String>());
+        model.addAttribute("vehicleBrands", VehicleOptions.BRANDS);
+        model.addAttribute("vehicleTypes", VehicleOptions.TYPES);
     }
 
     public void prepareReviewModel(HttpSession session, Model model) {

@@ -28,17 +28,31 @@
             <hr class="border-0 border-t border-gray-200"/>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <my:input id="brand" name="brand" type="text" label="ব্র্যান্ড"
-                          placeholder="যেমন: টয়োটা" autocomplete="off"
-                          value="${draft.vehicle.brand}" error="${errors['brand']}"/>
+                <my:select id="brand" name="brand" label="ব্র্যান্ড"
+                           placeholder="ব্র্যান্ড নির্বাচন করুন" required="true"
+                           options="${vehicleBrands}"
+                           value="${draft.vehicle.brand}" error="${errors['brand']}"/>
                 <my:input id="model" name="model" type="text" label="মডেল"
                           placeholder="মডেল নম্বর লিখুন" autocomplete="off"
                           value="${draft.vehicle.model}" error="${errors['model']}"/>
             </div>
 
-            <my:input id="vehicleType" name="vehicleType" type="text" label="যানবাহনের ধরন"
-                      placeholder="যেমন: কার, ট্রাক, বাইক" autocomplete="off"
-                      value="${draft.vehicle.vehicleType}" error="${errors['vehicleType']}"/>
+            <div>
+                <p class="mb-2 text-[13px] font-medium text-gray-700">যানবাহনের ধরন</p>
+                <div class="grid grid-cols-3 gap-3" role="radiogroup" aria-label="যানবাহনের ধরন">
+                    <c:forEach items="${vehicleTypes}" var="type">
+                        <label class="cursor-pointer rounded-lg border-2 border-gray-200 bg-white px-4 py-5 flex flex-col items-center gap-2 transition hover:border-gray-300 has-[:checked]:border-brand has-[:checked]:bg-brand/5">
+                            <input type="radio" name="vehicleType" value="${type.label}" class="sr-only" required
+                                   <c:if test="${draft.vehicle.vehicleType eq type.label}">checked</c:if>/>
+                            <span class="text-gray-700 [&>svg]:w-7 [&>svg]:h-7"><my:icon name="${type.icon}"/></span>
+                            <span class="text-sm font-medium text-gray-700">${type.label}</span>
+                        </label>
+                    </c:forEach>
+                </div>
+                <c:if test="${not empty errors['vehicleType']}">
+                    <p class="mt-1 text-xs text-red-600">${errors['vehicleType']}</p>
+                </c:if>
+            </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <my:input id="chassisNumber" name="chassisNumber" type="text" label="চ্যাসিস নম্বর"
