@@ -22,6 +22,11 @@ public class SmsConfig {
     @Bean
     public SmsSender smsSender(SmsProperties props, RestClient smsRestClient) {
         if ("bulksmsbd".equalsIgnoreCase(props.getProvider())) {
+            if (props.getApiKey() == null || props.getApiKey().isBlank()
+                    || props.getSenderId() == null || props.getSenderId().isBlank()) {
+                throw new IllegalStateException(
+                        "facs.sms.provider=bulksmsbd requires facs.sms.api-key and facs.sms.sender-id");
+            }
             log.info("SMS provider: bulksmsbd ({})", props.getBaseUrl());
             return new BulkSmsBdSender(props, smsRestClient);
         }

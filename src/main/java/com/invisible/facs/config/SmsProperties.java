@@ -10,9 +10,9 @@ public class SmsProperties {
     /** "console" (default) or "bulksmsbd". */
     private String provider = "console";
 
-    private String apiKey = "oZ15IBoKANtLb8oDkQID";
+    private String apiKey;
 
-    private String senderId = "8809601004489";
+    private String senderId;
 
     private String baseUrl = "https://bulksmsbd.net/api/smsapi";
 

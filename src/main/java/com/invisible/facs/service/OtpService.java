@@ -49,7 +49,9 @@ public class OtpService {
         repository.save(challenge);
 
         int minutes = Math.max(1, properties.getExpirySeconds() / 60);
-        smsSender.send(normalized, "FACS OTP: " + code + " (Valid " + minutes + " min)");
+        String message = "Your FACS verification code is " + code
+                + ". Valid for " + minutes + " min. Do not share.";
+        smsSender.send(normalized, message);
     }
 
     @Transactional
