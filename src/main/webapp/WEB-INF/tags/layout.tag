@@ -26,7 +26,7 @@
 </main>
 
 <footer class="border-t border-gray-200 bg-white text-gray-500 text-sm flex items-center justify-center px-6 py-4 text-center">
-    <small>@ ২০২৬ ফুয়েল এক্সেস কন্ট্রোল সিস্টেম - সর্বস্বত্ব সংরক্ষিত</small>
+    <small>© ২০২৬ ফুয়েল এক্সেস কন্ট্রোল সিস্টেম - সর্বস্বত্ব সংরক্ষিত</small>
 </footer>
 
 </body>

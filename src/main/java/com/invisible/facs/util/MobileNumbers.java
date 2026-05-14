@@ -7,13 +7,18 @@ public final class MobileNumbers {
 
     private MobileNumbers() {}
 
-    /** Returns null on null input; otherwise strips non-digits, prepends 880 if missing, returns 13-char digits. */
+    /**
+     * Normalizes a Bangladeshi mobile number to 13 digits starting with "880".
+     * Accepts forms like "01712345678", "+8801712345678", "8801712345678", "1712345678".
+     * Returns {@code null} for null or any input that doesn't match one of these forms — callers
+     * must null-check before using the result.
+     */
     public static String normalize(String raw) {
         if (raw == null) return null;
         String digits = raw.replaceAll("\\D", "");
         if (digits.startsWith("880") && digits.length() == 13) return digits;
         if (digits.startsWith("0") && digits.length() == 11) return "88" + digits;
         if (digits.startsWith("1") && digits.length() == 10) return "880" + digits;
-        return digits;
+        return null;
     }
 }

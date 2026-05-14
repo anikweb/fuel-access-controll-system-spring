@@ -15,10 +15,4 @@ public class SmsProperties {
     private String senderId;
 
     private String baseUrl = "https://bulksmsbd.net/api/smsapi";
-
-    /**
-     * Message type passed to the provider as the {@code type} query param (e.g.
-     * "text").
-     */
-    private String type = "text";
 }

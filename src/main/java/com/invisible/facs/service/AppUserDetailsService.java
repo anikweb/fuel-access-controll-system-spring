@@ -3,7 +3,7 @@ package com.invisible.facs.service;
 import com.invisible.facs.model.User;
 import com.invisible.facs.repository.UserRepository;
 import com.invisible.facs.util.MobileNumbers;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -14,10 +14,10 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class AppUserDetailsService implements UserDetailsService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
     @Override
     public UserDetails loadUserByUsername(String mobile) throws UsernameNotFoundException {

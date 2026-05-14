@@ -48,11 +48,11 @@ public class UserProfile {
     @Column(name = "address", columnDefinition = "TEXT")
     private String address;
 
-    @Column(name = "district_code", length = 64)
-    private String districtCode;
+    @Column(name = "district", length = 64)
+    private String district;
 
-    @Column(name = "sub_district_code", length = 64)
-    private String subDistrictCode;
+    @Column(name = "sub_district", length = 64)
+    private String subDistrict;
 
     @Column(name = "photo_path", length = 255)
     private String photoPath;

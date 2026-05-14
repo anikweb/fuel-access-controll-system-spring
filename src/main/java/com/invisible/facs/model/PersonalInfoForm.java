@@ -31,7 +31,7 @@ public class PersonalInfoForm implements Serializable {
     private String nidNumber;
 
     /** Public URL path (e.g. /uploads/users/photos/<uuid>.jpg). Set by FileStorageService. */
-    private String photoRef;
-    private String licenseFrontRef;
-    private String licenseBackRef;
+    private String photoPath;
+    private String licenseFrontPath;
+    private String licenseBackPath;
 }

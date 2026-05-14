@@ -4,14 +4,12 @@ import com.invisible.facs.service.BulkSmsBdSender;
 import com.invisible.facs.service.ConsoleSmsSender;
 import com.invisible.facs.service.SmsSender;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestClient;
 
 @Slf4j
 @Configuration
-@EnableConfigurationProperties(SmsProperties.class)
 public class SmsConfig {
 
     @Bean

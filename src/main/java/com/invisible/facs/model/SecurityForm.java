@@ -1,5 +1,6 @@
 package com.invisible.facs.model;
 
+import com.invisible.facs.util.PasswordRules;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -15,9 +16,9 @@ public class SecurityForm implements Serializable {
     private String mobile;
 
     @NotBlank
-    @Size(min = 8, max = 100, message = "পাসওয়ার্ড কমপক্ষে ৮ অক্ষর হতে হবে")
-    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$",
-            message = "পাসওয়ার্ডে কমপক্ষে একটি বড় হাতের অক্ষর, একটি ছোট হাতের অক্ষর ও একটি সংখ্যা থাকতে হবে")
+    @Size(min = PasswordRules.MIN_LENGTH, max = PasswordRules.MAX_LENGTH,
+            message = PasswordRules.LENGTH_MESSAGE)
+    @Pattern(regexp = PasswordRules.PATTERN_REGEX, message = PasswordRules.PATTERN_MESSAGE)
     private String password;
 
     @NotBlank

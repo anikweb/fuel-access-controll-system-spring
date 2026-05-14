@@ -8,4 +8,5 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class OtpProperties {
     private int length = 6;
     private int expirySeconds = 300;
+    private int maxAttempts = 5;
 }

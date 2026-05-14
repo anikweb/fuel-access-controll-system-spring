@@ -1,5 +1,6 @@
 package com.invisible.facs.controller;
 
+import com.invisible.facs.config.OtpProperties;
 import com.invisible.facs.model.PersonalInfoForm;
 import com.invisible.facs.model.SecurityForm;
 import com.invisible.facs.model.Vehicle;
@@ -7,7 +8,7 @@ import com.invisible.facs.service.RegistrationService;
 import com.invisible.facs.util.BanglaDigits;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -20,10 +21,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Controller
 @RequestMapping("/signup")
+@RequiredArgsConstructor
 public class SignupController {
 
-    @Autowired
-    private RegistrationService registrationService;
+    private final RegistrationService registrationService;
+    private final OtpProperties otpProperties;
 
     @GetMapping
     public String start() {
@@ -32,7 +34,7 @@ public class SignupController {
 
     @GetMapping("/personal")
     public String personal(HttpSession session, Model model) {
-        registrationService.prepareCommonModel(session, model, RegistrationService.STEP_PERSONAL);
+        registrationService.prepareCommonModel(session, model, RegistrationService.STEP_INDEX_PERSONAL);
         return "signup/step-personal";
     }
 
@@ -48,7 +50,7 @@ public class SignupController {
 
     @GetMapping("/vehicle")
     public String vehicle(HttpSession session, Model model) {
-        registrationService.prepareCommonModel(session, model, RegistrationService.STEP_VEHICLE);
+        registrationService.prepareCommonModel(session, model, RegistrationService.STEP_INDEX_VEHICLE);
         return "signup/step-vehicle";
     }
 
@@ -62,7 +64,7 @@ public class SignupController {
 
     @GetMapping("/security")
     public String security(HttpSession session, Model model) {
-        registrationService.prepareCommonModel(session, model, RegistrationService.STEP_SECURITY);
+        registrationService.prepareCommonModel(session, model, RegistrationService.STEP_INDEX_SECURITY);
         return "signup/step-security";
     }
 
@@ -97,6 +99,7 @@ public class SignupController {
         model.addAttribute("maskedMobile", BanglaDigits.formatMobile(mobile));
         model.addAttribute("verifyUrl", "/signup/verify-otp");
         model.addAttribute("resendUrl", "/signup/verify-otp/resend");
+        model.addAttribute("otpExpirySeconds", otpProperties.getExpirySeconds());
         return "otp/verify-otp";
     }
 

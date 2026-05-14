@@ -6,6 +6,11 @@
 
     <my:stepper items="${stepLabels}" currentIndex="${currentIndex}"/>
 
+    <c:if test="${param.error eq 'duplicate'}">
+        <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
+            এই মোবাইল নম্বর দিয়ে ইতিমধ্যে একটি অ্যাকাউন্ট রয়েছে। অনুগ্রহ করে সাইন ইন করুন।
+        </div>
+    </c:if>
     <c:if test="${param.error eq 'registrationFailed'}">
         <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
             নিবন্ধন সম্পন্ন হয়নি। অনুগ্রহ করে তথ্য যাচাই করে আবার চেষ্টা করুন।

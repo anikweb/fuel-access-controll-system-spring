@@ -16,7 +16,9 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        // Strength 12 is a sensible 2026 default (~250ms per hash on commodity hardware).
+        // Existing hashes encoded with a different strength still verify fine.
+        return new BCryptPasswordEncoder(12);
     }
 
     @Bean

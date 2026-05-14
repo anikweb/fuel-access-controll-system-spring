@@ -1,9 +1,10 @@
 package com.invisible.facs.controller;
 
+import com.invisible.facs.config.OtpProperties;
 import com.invisible.facs.service.UserService;
 import com.invisible.facs.util.BanglaDigits;
 import jakarta.servlet.http.HttpSession;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,10 +12,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
+@RequiredArgsConstructor
 public class PasswordResetController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
+    private final OtpProperties otpProperties;
 
     @GetMapping("/forgot-password")
     public String form() {
@@ -33,6 +35,7 @@ public class PasswordResetController {
         model.addAttribute("maskedMobile", BanglaDigits.formatMobile(mobile));
         model.addAttribute("verifyUrl", "/verify-otp");
         model.addAttribute("resendUrl", "/verify-otp/resend");
+        model.addAttribute("otpExpirySeconds", otpProperties.getExpirySeconds());
         return "otp/verify-otp";
     }
 

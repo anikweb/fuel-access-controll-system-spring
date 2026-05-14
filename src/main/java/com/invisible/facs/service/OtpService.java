@@ -5,9 +5,8 @@ import com.invisible.facs.model.OtpChallenge;
 import com.invisible.facs.model.OtpPurpose;
 import com.invisible.facs.repository.OtpChallengeRepository;
 import com.invisible.facs.util.MobileNumbers;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,21 +16,17 @@ import java.util.Optional;
 
 @Slf4j
 @Service
-@EnableConfigurationProperties(OtpProperties.class)
+@RequiredArgsConstructor
 public class OtpService {
 
     private static final SecureRandom RANDOM = new SecureRandom();
 
-    @Autowired
-    private OtpChallengeRepository repository;
+    private final OtpChallengeRepository repository;
+    private final SmsSender smsSender;
+    private final OtpProperties properties;
 
-    @Autowired
-    private SmsSender smsSender;
-
-    @Autowired
-    private OtpProperties properties;
-
-    @Transactional
+    // No @Transactional: repository.save() runs in its own short tx, so the SMS call
+    // below doesn't hold a DB transaction open while waiting on the SMS provider.
     public void issue(String mobile, OtpPurpose purpose) {
         String normalized = MobileNumbers.normalize(mobile);
         if (normalized == null || normalized.isBlank()) {
@@ -43,7 +38,7 @@ public class OtpService {
         OtpChallenge challenge = OtpChallenge.builder()
                 .mobile(normalized)
                 .purpose(purpose)
-                .codeHash(code)
+                .code(code)
                 .expiresAt(now.plusSeconds(properties.getExpirySeconds()))
                 .build();
         repository.save(challenge);
@@ -57,7 +52,10 @@ public class OtpService {
     @Transactional
     public boolean verify(String mobile, OtpPurpose purpose, String code) {
         String normalized = MobileNumbers.normalize(mobile);
-        if (normalized == null || code == null || !code.matches("\\d+")) return false;
+        if (normalized == null || code == null
+                || code.length() != properties.getLength() || !code.matches("\\d+")) {
+            return false;
+        }
 
         Optional<OtpChallenge> challengeOpt =
                 repository.findTopByMobileAndPurposeOrderByCreatedAtDesc(normalized, purpose);
@@ -68,12 +66,16 @@ public class OtpService {
 
         if (challenge.getConsumedAt() != null) return false;
         if (challenge.getExpiresAt().isBefore(now)) return false;
+        if (challenge.getAttempts() >= properties.getMaxAttempts()) return false;
 
-        if (code.equals(challenge.getCodeHash())) {
+        challenge.setAttempts(challenge.getAttempts() + 1);
+
+        if (code.equals(challenge.getCode())) {
             challenge.setConsumedAt(now);
             repository.save(challenge);
             return true;
         }
+        repository.save(challenge);
         return false;
     }
 

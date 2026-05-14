@@ -1,5 +1,6 @@
 package com.invisible.facs.controller;
 
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -16,7 +17,7 @@ public class HomeController {
                           @RequestParam(value = "passwordReset", required = false) String passwordReset,
                           Model model) {
         if (auth != null && auth.isAuthenticated()
-                && !"anonymousUser".equals(auth.getPrincipal())) {
+                && !(auth instanceof AnonymousAuthenticationToken)) {
             return "redirect:/dashboard";
         }
         if (error != null) {

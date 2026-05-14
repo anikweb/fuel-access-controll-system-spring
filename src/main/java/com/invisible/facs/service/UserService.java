@@ -6,11 +6,12 @@ import com.invisible.facs.model.UserProfile;
 import com.invisible.facs.repository.UserRepository;
 import com.invisible.facs.util.BanglaDigits;
 import com.invisible.facs.util.MobileNumbers;
+import com.invisible.facs.util.PasswordRules;
 import com.invisible.facs.model.Vehicle;
 import com.invisible.facs.repository.VehicleRepository;
 import jakarta.servlet.http.HttpSession;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,25 +26,22 @@ import java.util.Optional;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
     private static final String S_MOBILE = "resetMobile";
     private static final String S_VERIFIED = "resetVerified";
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private VehicleRepository vehicleRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private OtpService otpService;
+    private final UserRepository userRepository;
+    private final VehicleRepository vehicleRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final OtpService otpService;
 
     @Transactional(readOnly = true)
     public String prepareDashboard(Principal principal, Model model) {
+        if (principal == null) {
+            return "redirect:/";
+        }
         String mobile = principal.getName();
         Optional<User> userOpt = userRepository.findByMobile(mobile);
         if (userOpt.isEmpty()) {
@@ -61,8 +59,8 @@ public class UserService {
             profileCard.put("name", profile.getName());
             profileCard.put("nidNumber", profile.getNidNumber());
             profileCard.put("licenseNumber", profile.getLicenseNumber());
-            profileCard.put("district", profile.getDistrictCode());
-            profileCard.put("subDistrict", profile.getSubDistrictCode());
+            profileCard.put("district", profile.getDistrict());
+            profileCard.put("subDistrict", profile.getSubDistrict());
             profileCard.put("address", profile.getAddress());
             profileCard.put("licenseFrontUrl", profile.getLicenseFrontPath());
             profileCard.put("licenseBackUrl", profile.getLicenseBackPath());
@@ -77,7 +75,7 @@ public class UserService {
             card.put("type", v.getVehicleType());
             card.put("color", v.getColor());
             card.put("year", v.getManufactureYear());
-            card.put("plateImageUrl", v.getPlateImageRef());
+            card.put("plateImageUrl", v.getPlateImagePath());
             vehicleCards.add(card);
         }
 
@@ -97,8 +95,6 @@ public class UserService {
         view.put("vehicles", vehicleCards);
 
         model.addAttribute("view", view);
-        model.addAttribute("displayName", displayName);
-        model.addAttribute("mobile", BanglaDigits.formatMobile(user.getMobile()));
         return "user/dashboard";
     }
 
@@ -148,7 +144,7 @@ public class UserService {
     public String submitNewPassword(String password, String passwordConfirm, HttpSession session) {
         if (!isResetVerified(session)) return "redirect:/forgot-password";
 
-        if (password == null || password.length() < 8) {
+        if (!PasswordRules.isValid(password)) {
             return "redirect:/reset-password?error=weak";
         }
         if (!password.equals(passwordConfirm)) {

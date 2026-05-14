@@ -19,7 +19,7 @@
             </c:if>
 
             <header class="flex flex-col items-center text-center">
-                <my:avatarUpload id="photo" name="photo" initial="${draft.personal.photoRef}"/>
+                <my:avatarUpload id="photo" name="photo" initial="${draft.personal.photoPath}"/>
                 <h1 class="mt-4 text-[20px] sm:text-[22px] font-bold text-gray-900 tracking-tight">
                     ড্রাইভিং লাইসেন্স ও ব্যক্তিগত তথ্য
                 </h1>

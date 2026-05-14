@@ -42,8 +42,11 @@ public class OtpChallenge {
     private OtpPurpose purpose;
 
     // OTP code (plaintext — short-lived).
-    @Column(name = "code_hash", nullable = false, length = 100)
-    private String codeHash;
+    @Column(name = "code", nullable = false, length = 100)
+    private String code;
+
+    @Column(name = "attempts", nullable = false)
+    private int attempts;
 
     @Column(name = "expires_at", nullable = false)
     private Instant expiresAt;

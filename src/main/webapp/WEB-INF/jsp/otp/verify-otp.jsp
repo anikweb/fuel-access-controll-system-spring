@@ -46,7 +46,7 @@
         <div class="mt-4 flex items-center justify-between text-sm">
             <span class="inline-flex items-center gap-1.5 text-gray-500">
                 <span><my:icon name="clock"/></span>
-                <span data-otp-timer="120" data-digits="bangla">০২:০০</span>
+                <span data-otp-timer="${otpExpirySeconds}" data-digits="bangla">০৫:০০</span>
             </span>
             <form action="${resendUrl}" method="post" class="m-0">
                 <c:if test="${not empty _csrf}">

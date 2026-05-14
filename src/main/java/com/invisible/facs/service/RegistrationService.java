@@ -9,10 +9,9 @@ import com.invisible.facs.model.Vehicle;
 import com.invisible.facs.repository.UserRepository;
 import com.invisible.facs.util.BanglaDigits;
 import com.invisible.facs.util.MobileNumbers;
-import com.invisible.facs.model.Vehicle;
 import jakarta.servlet.http.HttpSession;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,44 +20,35 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class RegistrationService {
 
-    private static final String S_PERSONAL = "regPersonal";
-    private static final String S_VEHICLE = "regVehicle";
-    private static final String S_SECURITY = "regSecurity";
-    private static final String S_OTP_SENT = "regOtpSent";
+    private static final String SESSION_KEY_PERSONAL = "regPersonal";
+    private static final String SESSION_KEY_VEHICLE = "regVehicle";
+    private static final String SESSION_KEY_SECURITY = "regSecurity";
+    private static final String SESSION_KEY_OTP_SENT = "regOtpSent";
 
-    private static final List<String> STEP_LABELS = new ArrayList<>();
-    static {
-        STEP_LABELS.add("ব্যক্তিগত তথ্য");
-        STEP_LABELS.add("যানবাহনের তথ্য");
-        STEP_LABELS.add("নিরাপত্তা");
-        STEP_LABELS.add("রিভিউ");
-    }
+    private static final List<String> STEP_LABELS = List.of(
+            "ব্যক্তিগত তথ্য",
+            "যানবাহনের তথ্য",
+            "নিরাপত্তা",
+            "রিভিউ");
 
-    public static final int STEP_PERSONAL = 0;
-    public static final int STEP_VEHICLE = 1;
-    public static final int STEP_SECURITY = 2;
-    public static final int STEP_REVIEW = 3;
+    public static final int STEP_INDEX_PERSONAL = 0;
+    public static final int STEP_INDEX_VEHICLE = 1;
+    public static final int STEP_INDEX_SECURITY = 2;
+    public static final int STEP_INDEX_REVIEW = 3;
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private FileStorageService fileStorageService;
-
-    @Autowired
-    private OtpService otpService;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final FileStorageService fileStorageService;
+    private final OtpService otpService;
 
     public void prepareCommonModel(HttpSession session, Model model, int currentIndex) {
         model.addAttribute("stepLabels", STEP_LABELS);
@@ -68,7 +58,7 @@ public class RegistrationService {
     }
 
     public void prepareReviewModel(HttpSession session, Model model) {
-        prepareCommonModel(session, model, STEP_REVIEW);
+        prepareCommonModel(session, model, STEP_INDEX_REVIEW);
         PersonalInfoForm personal = getPersonal(session);
         Vehicle vehicle = getVehicle(session);
         SecurityForm security = getSecurity(session);
@@ -78,13 +68,13 @@ public class RegistrationService {
         model.addAttribute("displayBrand", vehicle.getBrand());
         model.addAttribute("displayDistrict", personal.getDistrict());
         model.addAttribute("displaySubDistrict", personal.getSubDistrict());
-        model.addAttribute("displayModelYear", formatModelYear(vehicle));
+        model.addAttribute("displayModelYear", formatModelAndYear(vehicle));
     }
 
     public String submitPersonal(PersonalInfoForm form, BindingResult bindingResult,
                                  MultipartFile photo, MultipartFile licenseFront, MultipartFile licenseBack,
                                  HttpSession session, Model model) {
-        prepareCommonModel(session, model, STEP_PERSONAL);
+        prepareCommonModel(session, model, STEP_INDEX_PERSONAL);
         if (bindingResult.hasErrors()) {
             model.addAttribute("errors", errorMap(bindingResult));
             return "signup/step-personal";
@@ -94,24 +84,24 @@ public class RegistrationService {
             String photoPath = fileStorageService.store(photo, "users/photos");
             String frontPath = fileStorageService.store(licenseFront, "users/licenses");
             String backPath = fileStorageService.store(licenseBack, "users/licenses");
-            if (photoPath != null) fileStorageService.delete(existing.getPhotoRef());
-            if (frontPath != null) fileStorageService.delete(existing.getLicenseFrontRef());
-            if (backPath != null) fileStorageService.delete(existing.getLicenseBackRef());
-            form.setPhotoRef(photoPath != null ? photoPath : existing.getPhotoRef());
-            form.setLicenseFrontRef(frontPath != null ? frontPath : existing.getLicenseFrontRef());
-            form.setLicenseBackRef(backPath != null ? backPath : existing.getLicenseBackRef());
+            if (photoPath != null) fileStorageService.delete(existing.getPhotoPath());
+            if (frontPath != null) fileStorageService.delete(existing.getLicenseFrontPath());
+            if (backPath != null) fileStorageService.delete(existing.getLicenseBackPath());
+            form.setPhotoPath(photoPath != null ? photoPath : existing.getPhotoPath());
+            form.setLicenseFrontPath(frontPath != null ? frontPath : existing.getLicenseFrontPath());
+            form.setLicenseBackPath(backPath != null ? backPath : existing.getLicenseBackPath());
         } catch (IllegalArgumentException e) {
             model.addAttribute("uploadError", e.getMessage());
             return "signup/step-personal";
         }
-        session.setAttribute(S_PERSONAL, form);
+        session.setAttribute(SESSION_KEY_PERSONAL, form);
         return "redirect:/signup/vehicle";
     }
 
     public String submitVehicle(Vehicle form, BindingResult bindingResult,
                                 MultipartFile plateImage,
                                 HttpSession session, Model model) {
-        prepareCommonModel(session, model, STEP_VEHICLE);
+        prepareCommonModel(session, model, STEP_INDEX_VEHICLE);
         if (bindingResult.hasErrors()) {
             model.addAttribute("errors", errorMap(bindingResult));
             return "signup/step-vehicle";
@@ -119,19 +109,19 @@ public class RegistrationService {
         Vehicle existing = getVehicle(session);
         try {
             String platePath = fileStorageService.store(plateImage, "users/plates");
-            if (platePath != null) fileStorageService.delete(existing.getPlateImageRef());
-            form.setPlateImageRef(platePath != null ? platePath : existing.getPlateImageRef());
+            if (platePath != null) fileStorageService.delete(existing.getPlateImagePath());
+            form.setPlateImagePath(platePath != null ? platePath : existing.getPlateImagePath());
         } catch (IllegalArgumentException e) {
             model.addAttribute("uploadError", e.getMessage());
             return "signup/step-vehicle";
         }
-        session.setAttribute(S_VEHICLE, form);
+        session.setAttribute(SESSION_KEY_VEHICLE, form);
         return "redirect:/signup/security";
     }
 
     public String submitSecurity(SecurityForm form, BindingResult bindingResult,
                                  HttpSession session, Model model) {
-        prepareCommonModel(session, model, STEP_SECURITY);
+        prepareCommonModel(session, model, STEP_INDEX_SECURITY);
         if (!form.getPassword().equals(form.getPasswordConfirm())) {
             bindingResult.rejectValue("passwordConfirm", "mismatch", "পাসওয়ার্ড মিলছে না");
         }
@@ -147,8 +137,8 @@ public class RegistrationService {
             return "signup/step-security";
         }
         form.setMobile(normalized);
-        session.setAttribute(S_SECURITY, form);
-        session.setAttribute(S_OTP_SENT, Boolean.FALSE);
+        session.setAttribute(SESSION_KEY_SECURITY, form);
+        session.setAttribute(SESSION_KEY_OTP_SENT, Boolean.FALSE);
         return "redirect:/signup/review";
     }
 
@@ -167,16 +157,16 @@ public class RegistrationService {
             log.warn("OTP send failed: {}", e.getMessage());
             return "redirect:/signup/review?smsError=generic";
         }
-        session.setAttribute(S_OTP_SENT, Boolean.TRUE);
+        session.setAttribute(SESSION_KEY_OTP_SENT, Boolean.TRUE);
         return "redirect:/signup/verify-otp";
     }
 
     public boolean isOtpSent(HttpSession session) {
-        return Boolean.TRUE.equals(session.getAttribute(S_OTP_SENT));
+        return Boolean.TRUE.equals(session.getAttribute(SESSION_KEY_OTP_SENT));
     }
 
     public String getCurrentMobile(HttpSession session) {
-        SecurityForm security = (SecurityForm) session.getAttribute(S_SECURITY);
+        SecurityForm security = (SecurityForm) session.getAttribute(SESSION_KEY_SECURITY);
         return security == null ? null : security.getMobile();
     }
 
@@ -195,6 +185,9 @@ public class RegistrationService {
             finalizeDraft(session);
             reset(session);
             return "redirect:/?registered";
+        } catch (DuplicateMobileException e) {
+            log.info("Signup blocked — mobile already registered: {}", e.getMessage());
+            return "redirect:/signup/security?error=duplicate";
         } catch (RuntimeException e) {
             log.warn("finalizeDraft failed: {}", e.getMessage());
             return "redirect:/signup/security?error=registrationFailed";
@@ -231,7 +224,7 @@ public class RegistrationService {
 
         String mobile = MobileNumbers.normalize(security.getMobile());
         if (userRepository.findByMobile(mobile).isPresent()) {
-            throw new IllegalStateException("Account already exists for this mobile");
+            throw new DuplicateMobileException(mobile);
         }
 
         User user = User.builder()
@@ -246,11 +239,11 @@ public class RegistrationService {
                 .licenseNumber(personal.getLicenseNumber())
                 .nidNumber(personal.getNidNumber())
                 .address(personal.getAddress())
-                .districtCode(personal.getDistrict())
-                .subDistrictCode(personal.getSubDistrict())
-                .photoPath(personal.getPhotoRef())
-                .licenseFrontPath(personal.getLicenseFrontRef())
-                .licenseBackPath(personal.getLicenseBackRef())
+                .district(personal.getDistrict())
+                .subDistrict(personal.getSubDistrict())
+                .photoPath(personal.getPhotoPath())
+                .licenseFrontPath(personal.getLicenseFrontPath())
+                .licenseBackPath(personal.getLicenseBackPath())
                 .build();
         user.setProfile(profile);
 
@@ -262,24 +255,24 @@ public class RegistrationService {
     }
 
     public void reset(HttpSession session) {
-        session.removeAttribute(S_PERSONAL);
-        session.removeAttribute(S_VEHICLE);
-        session.removeAttribute(S_SECURITY);
-        session.removeAttribute(S_OTP_SENT);
+        session.removeAttribute(SESSION_KEY_PERSONAL);
+        session.removeAttribute(SESSION_KEY_VEHICLE);
+        session.removeAttribute(SESSION_KEY_SECURITY);
+        session.removeAttribute(SESSION_KEY_OTP_SENT);
     }
 
     private PersonalInfoForm getPersonal(HttpSession session) {
-        PersonalInfoForm form = (PersonalInfoForm) session.getAttribute(S_PERSONAL);
+        PersonalInfoForm form = (PersonalInfoForm) session.getAttribute(SESSION_KEY_PERSONAL);
         return form == null ? new PersonalInfoForm() : form;
     }
 
     private Vehicle getVehicle(HttpSession session) {
-        Vehicle vehicle = (Vehicle) session.getAttribute(S_VEHICLE);
+        Vehicle vehicle = (Vehicle) session.getAttribute(SESSION_KEY_VEHICLE);
         return vehicle == null ? new Vehicle() : vehicle;
     }
 
     private SecurityForm getSecurity(HttpSession session) {
-        SecurityForm form = (SecurityForm) session.getAttribute(S_SECURITY);
+        SecurityForm form = (SecurityForm) session.getAttribute(SESSION_KEY_SECURITY);
         return form == null ? new SecurityForm() : form;
     }
 
@@ -291,7 +284,7 @@ public class RegistrationService {
         return draft;
     }
 
-    private String formatModelYear(Vehicle v) {
+    private String formatModelAndYear(Vehicle v) {
         if (v.getModel() == null || v.getModel().isBlank()) return null;
         if (v.getManufactureYear() == null || v.getManufactureYear().isBlank()) return v.getModel();
         return v.getModel() + " - " + v.getManufactureYear();

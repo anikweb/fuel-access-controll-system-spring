@@ -42,7 +42,7 @@ public class Vehicle implements Serializable {
     private User user;
 
     @NotBlank
-    @Column(name = "brand_code", length = 64)
+    @Column(name = "brand", length = 64)
     private String brand;
 
     @Size(max = 120)
@@ -50,7 +50,7 @@ public class Vehicle implements Serializable {
     private String model;
 
     @NotBlank
-    @Column(name = "vehicle_type_code", length = 64)
+    @Column(name = "vehicle_type", length = 64)
     private String vehicleType;
 
     @NotBlank
@@ -76,7 +76,7 @@ public class Vehicle implements Serializable {
     private String plateNumber;
 
     @Column(name = "plate_image_path", length = 255)
-    private String plateImageRef;
+    private String plateImagePath;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
