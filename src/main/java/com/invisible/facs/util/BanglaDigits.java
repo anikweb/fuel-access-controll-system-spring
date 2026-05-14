@@ -16,11 +16,6 @@ public final class BanglaDigits {
         }
         return out.toString();
     }
-
-    /**
-     * Mask a Bangladeshi mobile number for display, e.g.
-     *   "01713456789" -> "+৮৮০ ১৭১৩-XXXXXX"
-     */
     public static String maskMobile(String raw) {
         if (raw == null) return "+৮৮০ XXXXXXXXXX";
         String digits = raw.replaceAll("\\D", "");
@@ -30,11 +25,6 @@ public final class BanglaDigits {
         return "+" + convert("880 " + digits.substring(0, 4)) + "-XXXXXX";
     }
 
-    /**
-     * Format a Bangladeshi mobile for display without masking, e.g.
-     *   "01712345678" -> "+৮৮০ ১৭১২-৩৪৫৬৭৮"
-     * Falls back to converting input digits to Bangla if the shape is unexpected.
-     */
     public static String formatMobile(String raw) {
         if (raw == null || raw.isBlank()) return null;
         String digits = raw.replaceAll("\\D", "");

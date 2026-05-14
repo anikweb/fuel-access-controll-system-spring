@@ -45,8 +45,6 @@ public class FileStorageService {
         }
 
         try {
-            // Verify the file's first bytes match the declared Content-Type. The Content-Type
-            // header is set by the browser and can be spoofed; magic bytes can't be (easily).
             byte[] header = readHeader(file, 12);
             if (!magicMatches(header, contentType)) {
                 throw new IllegalArgumentException("File content does not match declared type");

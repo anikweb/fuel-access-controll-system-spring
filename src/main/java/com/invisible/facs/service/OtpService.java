@@ -25,8 +25,6 @@ public class OtpService {
     private final SmsSender smsSender;
     private final OtpProperties properties;
 
-    // No @Transactional: repository.save() runs in its own short tx, so the SMS call
-    // below doesn't hold a DB transaction open while waiting on the SMS provider.
     public void issue(String mobile, OtpPurpose purpose) {
         String normalized = MobileNumbers.normalize(mobile);
         if (normalized == null || normalized.isBlank()) {
@@ -44,8 +42,8 @@ public class OtpService {
         repository.save(challenge);
 
         int minutes = Math.max(1, properties.getExpirySeconds() / 60);
-        String message = "Your FACS verification code is " + code
-                + ". Valid for " + minutes + " min. Do not share.";
+        String message = "আপনার FACS ভেরিফিকেশন কোড হলো " + code
+                + ",  মেয়াদঃ " + minutes + " মিনিট";
         smsSender.send(normalized, message);
     }
 
