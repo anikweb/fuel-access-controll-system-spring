@@ -16,9 +16,12 @@
 <%@ attribute name="value" required="false" %>
 <%@ attribute name="error" required="false" %>
 
+<c:set var="isRequired" value="${required eq 'true' or required eq true}"/>
 <div class="flex flex-col">
     <div class="mb-1.5 flex items-baseline justify-between">
-        <label for="${id}" class="text-[13px] font-medium text-gray-700">${label}</label>
+        <label for="${id}" class="text-[13px] font-medium text-gray-700">
+            ${label}<c:if test="${isRequired}"> <span class="text-red-600">*</span></c:if>
+        </label>
         <c:if test="${not empty actionHref}">
             <a href="${actionHref}" class="text-xs font-medium text-brand hover:underline">${actionLabel}</a>
         </c:if>
@@ -35,7 +38,7 @@
                placeholder="${placeholder}"
                autocomplete="${autocomplete}"
                value="${value}"
-               <c:if test="${required eq 'true' or required eq true}">required</c:if>/>
+               <c:if test="${isRequired}">required</c:if>/>
         <c:if test="${not empty trailingIcon and not (passwordToggle eq 'true' or passwordToggle eq true)}">
             <span class="pr-3 flex items-center text-gray-400"><my:icon name="${trailingIcon}"/></span>
         </c:if>

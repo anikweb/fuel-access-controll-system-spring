@@ -8,7 +8,7 @@
         <my:sidebarNavItem href="/admin/users" icon="users" label="ব্যবহারকারী"/>
         <my:sidebarNavItem href="/admin/transactions" icon="receipt" label="লেনদেন"/>
         <my:sidebarNavItem href="/admin/vehicles" icon="truck" label="যানবাহন"/>
-        <my:sidebarNavItem href="/admin/terminals" icon="terminal" label="টার্মিনাল"/>
+        <my:sidebarNavItem href="/admin/stations" icon="terminal" label="স্টেশন"/>
     </jsp:attribute>
 
     <jsp:attribute name="sidebarFooter">
@@ -24,52 +24,44 @@
                 <my:statCard label="নিবন্ধিত যানবাহন"        value="${registeredVehicles}" icon="truck"/>
             </div>
 
-            <my:panelCard title="সাম্প্রতিক লেনদেন" actionHref="/admin/transactions" actionLabel="সবগুলো দেখুন">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
-                        <thead class="bg-gray-50 text-gray-500">
-                        <tr class="text-left text-[12px] font-semibold tracking-wide">
-                            <th class="px-6 py-3 font-semibold">লেনদেন আইডি</th>
-                            <th class="px-6 py-3 font-semibold">তারিখ ও সময়</th>
-                            <th class="px-6 py-3 font-semibold">যানবাহন</th>
-                            <th class="px-6 py-3 font-semibold">স্টেশন</th>
-                            <th class="px-6 py-3 font-semibold text-right">পরিমাণ</th>
-                            <th class="px-6 py-3 font-semibold text-center">অবস্থা</th>
-                        </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100">
-                        <c:choose>
-                            <c:when test="${empty recentTransactions}">
-                                <tr>
-                                    <td colspan="6" class="px-6 py-10 text-center text-sm text-gray-500">
-                                        এখনো কোনো লেনদেন নেই।
-                                    </td>
-                                </tr>
-                            </c:when>
-                            <c:otherwise>
-                                <c:forEach items="${recentTransactions}" var="t">
-                                    <tr class="hover:bg-gray-50/60 transition">
-                                        <td class="px-6 py-4 text-brand font-semibold whitespace-nowrap">#${t.id}</td>
-                                        <td class="px-6 py-4 text-gray-700">${t.when}</td>
-                                        <td class="px-6 py-4">
-                                            <span class="inline-flex items-center gap-2 text-gray-800">
-                                                <span class="text-gray-400"><my:icon name="truck"/></span>
-                                                <span>${t.vehicle}</span>
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-4 text-gray-700">${t.station}</td>
-                                        <td class="px-6 py-4 text-right text-gray-900 font-medium tabular-nums whitespace-nowrap">${t.qty}</td>
-                                        <td class="px-6 py-4 text-center">
-                                            <my:statusBadge label="${t.statusLabel}" variant="${t.statusVariant}"/>
-                                        </td>
-                                    </tr>
-                                </c:forEach>
-                            </c:otherwise>
-                        </c:choose>
-                        </tbody>
-                    </table>
-                </div>
-            </my:panelCard>
+            <my:dataTable
+                title="সাম্প্রতিক লেনদেন"
+                actionHref="/admin/transactions"
+                actionLabel="সবগুলো দেখুন"
+                isEmpty="${empty recentTransactions}"
+                emptyMessage="এখনো কোনো লেনদেন নেই।"
+                colspan="6"
+                paginated="false">
+
+                <jsp:attribute name="header">
+                    <my:dataTableHeadCell label="লেনদেন আইডি"/>
+                    <my:dataTableHeadCell label="তারিখ ও সময়"/>
+                    <my:dataTableHeadCell label="যানবাহন"/>
+                    <my:dataTableHeadCell label="স্টেশন"/>
+                    <my:dataTableHeadCell label="পরিমাণ" align="right"/>
+                    <my:dataTableHeadCell label="অবস্থা" align="center"/>
+                </jsp:attribute>
+
+                <jsp:body>
+                    <c:forEach items="${recentTransactions}" var="t">
+                        <my:dataTableRow>
+                            <my:dataTableBodyCell tone="brand" bold="true" nowrap="true">#${t.id}</my:dataTableBodyCell>
+                            <my:dataTableBodyCell tone="muted">${t.when}</my:dataTableBodyCell>
+                            <my:dataTableBodyCell>
+                                <span class="inline-flex items-center gap-2 text-gray-800">
+                                    <span class="text-gray-400"><my:icon name="truck"/></span>
+                                    <span>${t.vehicle}</span>
+                                </span>
+                            </my:dataTableBodyCell>
+                            <my:dataTableBodyCell tone="muted">${t.station}</my:dataTableBodyCell>
+                            <my:dataTableBodyCell align="right" bold="true" mono="true" nowrap="true">${t.qty}</my:dataTableBodyCell>
+                            <my:dataTableBodyCell align="center">
+                                <my:statusBadge label="${t.statusLabel}" variant="${t.statusVariant}"/>
+                            </my:dataTableBodyCell>
+                        </my:dataTableRow>
+                    </c:forEach>
+                </jsp:body>
+            </my:dataTable>
 
         </section>
     </jsp:body>

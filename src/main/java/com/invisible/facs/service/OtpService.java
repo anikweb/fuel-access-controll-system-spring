@@ -25,7 +25,8 @@ public class OtpService {
     private final SmsSender smsSender;
     private final OtpProperties properties;
 
-    // No @Transactional: repository.save() runs in its own short tx, so the SMS call
+    // No @Transactional: repository.save() runs in its own short tx, so the SMS
+    // call
     // below doesn't hold a DB transaction open while waiting on the SMS provider.
     public void issue(String mobile, OtpPurpose purpose) {
         String normalized = MobileNumbers.normalize(mobile);
@@ -44,8 +45,8 @@ public class OtpService {
         repository.save(challenge);
 
         int minutes = Math.max(1, properties.getExpirySeconds() / 60);
-        String message = "Your FACS verification code is " + code
-                + ". Valid for " + minutes + " min. Do not share.";
+        String message = "আপনার FACS ভেরিফিকেশন কোড হল " + code
+                + ". " + minutes + " মিনিটের জন্য কার্যকর।";
         smsSender.send(normalized, message);
     }
 
@@ -57,16 +58,20 @@ public class OtpService {
             return false;
         }
 
-        Optional<OtpChallenge> challengeOpt =
-                repository.findTopByMobileAndPurposeOrderByCreatedAtDesc(normalized, purpose);
-        if (challengeOpt.isEmpty()) return false;
+        Optional<OtpChallenge> challengeOpt = repository.findTopByMobileAndPurposeOrderByCreatedAtDesc(normalized,
+                purpose);
+        if (challengeOpt.isEmpty())
+            return false;
 
         OtpChallenge challenge = challengeOpt.get();
         Instant now = Instant.now();
 
-        if (challenge.getConsumedAt() != null) return false;
-        if (challenge.getExpiresAt().isBefore(now)) return false;
-        if (challenge.getAttempts() >= properties.getMaxAttempts()) return false;
+        if (challenge.getConsumedAt() != null)
+            return false;
+        if (challenge.getExpiresAt().isBefore(now))
+            return false;
+        if (challenge.getAttempts() >= properties.getMaxAttempts())
+            return false;
 
         challenge.setAttempts(challenge.getAttempts() + 1);
 
