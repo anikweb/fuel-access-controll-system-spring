@@ -4,6 +4,8 @@ import com.invisible.facs.model.Vehicle;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -44,6 +46,11 @@ public class User {
     @Column(name = "name", length = 120)
     private String name;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false, columnDefinition = "VARCHAR(20) NOT NULL DEFAULT 'VEHICLE_OWNER'")
+    @Builder.Default
+    private Role role = Role.VEHICLE_OWNER;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -58,6 +65,9 @@ public class User {
     void onCreate() {
         if (createdAt == null) {
             createdAt = Instant.now();
+        }
+        if (role == null) {
+            role = Role.VEHICLE_OWNER;
         }
     }
 }

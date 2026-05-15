@@ -2,6 +2,7 @@ package com.invisible.facs.service;
 
 import com.invisible.facs.model.OtpPurpose;
 import com.invisible.facs.model.PersonalInfoForm;
+import com.invisible.facs.model.Role;
 import com.invisible.facs.model.SecurityForm;
 import com.invisible.facs.model.User;
 import com.invisible.facs.model.UserProfile;
@@ -234,6 +235,7 @@ public class RegistrationService {
                 .mobile(mobile)
                 .passwordHash(passwordEncoder.encode(security.getPassword()))
                 .name(personal.getName())
+                .role(Role.VEHICLE_OWNER)
                 .build();
 
         UserProfile profile = UserProfile.builder()

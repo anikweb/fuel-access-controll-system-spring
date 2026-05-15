@@ -55,7 +55,7 @@
             <my:textarea id="address" name="address" label="বিস্তারিত ঠিকানা"
                          value="${draft.personal.address}" rows="3"/>
 
-            <my:input id="nidNumber" name="nidNumber" type="text" label="NID নম্বর (ঐচ্ছিক)"
+            <my:input id="nidNumber" name="nidNumber" type="text" label="NID নম্বর"
                       autocomplete="off" value="${draft.personal.nidNumber}"
                       error="${errors['nidNumber']}"/>
 
