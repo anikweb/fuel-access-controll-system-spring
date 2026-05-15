@@ -10,4 +10,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByMobile(String mobile);
 
     boolean existsByRole(Role role);
+
+    long countByRole(Role role);
 }
