@@ -1,6 +1,8 @@
 package com.invisible.facs.config;
 
+import com.invisible.facs.security.RoleBasedAuthSuccessHandler;
 import jakarta.servlet.DispatcherType;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -12,7 +14,10 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
+
+    private final RoleBasedAuthSuccessHandler roleBasedAuthSuccessHandler;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -25,6 +30,9 @@ public class SecurityConfig {
         http.authorizeHttpRequests(auth->auth
                         .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.INCLUDE).permitAll()
                         .requestMatchers("/", "/forgot-password", "/verify-otp", "/verify-otp/**", "/reset-password", "/reset-password/**", "/signup", "/signup/**", "/css/**", "/js/**", "/img/**", "/uploads/**", "/error", "/favicon.ico").permitAll()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/operator/**").hasRole("OPERATOR")
+                        .requestMatchers("/dashboard", "/dashboard/**").hasRole("VEHICLE_OWNER")
                         .anyRequest().authenticated())
                 .csrf(Customizer.withDefaults())
                 .formLogin(form->form
@@ -32,7 +40,7 @@ public class SecurityConfig {
                         .loginProcessingUrl("/signin")
                         .usernameParameter("mobile")
                         .passwordParameter("password")
-                        .defaultSuccessUrl("/dashboard", true)
+                        .successHandler(roleBasedAuthSuccessHandler)
                         .failureUrl("/?error")
                         .permitAll())
                 .logout(logout->logout

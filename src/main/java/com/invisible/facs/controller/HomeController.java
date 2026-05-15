@@ -1,5 +1,6 @@
 package com.invisible.facs.controller;
 
+import com.invisible.facs.util.RoleRedirects;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -18,7 +19,7 @@ public class HomeController {
                           Model model) {
         if (auth != null && auth.isAuthenticated()
                 && !(auth instanceof AnonymousAuthenticationToken)) {
-            return "redirect:/dashboard";
+            return "redirect:" + RoleRedirects.pathFor(auth);
         }
         if (error != null) {
             model.addAttribute("loginError", "মোবাইল নম্বর বা পাসওয়ার্ড সঠিক নয়।");
