@@ -7,6 +7,7 @@ import com.invisible.facs.model.SecurityForm;
 import com.invisible.facs.model.User;
 import com.invisible.facs.model.UserProfile;
 import com.invisible.facs.model.Vehicle;
+import com.invisible.facs.repository.UserProfileRepository;
 import com.invisible.facs.repository.UserRepository;
 import com.invisible.facs.util.BanglaDigits;
 import com.invisible.facs.util.MobileNumbers;
@@ -48,6 +49,7 @@ public class RegistrationService {
     public static final int STEP_INDEX_REVIEW = 3;
 
     private final UserRepository userRepository;
+    private final UserProfileRepository userProfileRepository;
     private final PasswordEncoder passwordEncoder;
     private final FileStorageService fileStorageService;
     private final OtpService otpService;
@@ -83,6 +85,24 @@ public class RegistrationService {
             model.addAttribute("errors", errorMap(bindingResult));
             return "signup/step-personal";
         }
+        String licenseNumber = form.getLicenseNumber() == null ? null : form.getLicenseNumber().trim();
+        String nidNumber = form.getNidNumber() == null ? null : form.getNidNumber().trim();
+        if (licenseNumber != null && !licenseNumber.isEmpty()
+                && userProfileRepository.existsByLicenseNumber(licenseNumber)) {
+            bindingResult.rejectValue("licenseNumber", "duplicate",
+                    "এই ড্রাইভিং লাইসেন্স নম্বর দিয়ে ইতিমধ্যে একটি অ্যাকাউন্ট রয়েছে।");
+        }
+        if (nidNumber != null && !nidNumber.isEmpty()
+                && userProfileRepository.existsByNidNumber(nidNumber)) {
+            bindingResult.rejectValue("nidNumber", "duplicate",
+                    "এই এনআইডি নম্বর দিয়ে ইতিমধ্যে একটি অ্যাকাউন্ট রয়েছে।");
+        }
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("errors", errorMap(bindingResult));
+            return "signup/step-personal";
+        }
+        form.setLicenseNumber(licenseNumber);
+        form.setNidNumber(nidNumber);
         PersonalInfoForm existing = getPersonal(session);
         try {
             String photoPath = fileStorageService.store(photo, "users/photos");
@@ -229,6 +249,14 @@ public class RegistrationService {
         String mobile = MobileNumbers.normalize(security.getMobile());
         if (userRepository.findByMobile(mobile).isPresent()) {
             throw new DuplicateMobileException(mobile);
+        }
+        if (personal.getLicenseNumber() != null && !personal.getLicenseNumber().isBlank()
+                && userProfileRepository.existsByLicenseNumber(personal.getLicenseNumber())) {
+            throw new IllegalStateException("Duplicate license number: " + personal.getLicenseNumber());
+        }
+        if (personal.getNidNumber() != null && !personal.getNidNumber().isBlank()
+                && userProfileRepository.existsByNidNumber(personal.getNidNumber())) {
+            throw new IllegalStateException("Duplicate NID number: " + personal.getNidNumber());
         }
 
         User user = User.builder()

@@ -39,10 +39,10 @@ public class UserProfile {
     @Column(name = "name", length = 160)
     private String name;
 
-    @Column(name = "license_number", length = 64)
+    @Column(name = "license_number", length = 64, unique = true)
     private String licenseNumber;
 
-    @Column(name = "nid_number", length = 64)
+    @Column(name = "nid_number", length = 64, unique = true)
     private String nidNumber;
 
     @Column(name = "address", columnDefinition = "TEXT")
