@@ -99,6 +99,7 @@ public class AdminController {
         if (!model.containsAttribute("station")) {
             model.addAttribute("station", new StationForm());
         }
+        model.addAttribute("formMode", "new");
         return "admin/stationForm";
     }
 
@@ -120,6 +121,59 @@ public class AdminController {
                 .build();
         stationRepository.save(station);
         return "redirect:/admin/stations";
+    }
+
+    @GetMapping("/stations/{id}/edit")
+    public String editStationForm(@PathVariable("id") Long id,
+                                  Model model,
+                                  RedirectAttributes redirectAttributes) {
+        return stationRepository.findById(id)
+                .map(station -> {
+                    if (!model.containsAttribute("station")) {
+                        StationForm form = new StationForm();
+                        form.setName(station.getName());
+                        form.setLocation(station.getLocation());
+                        model.addAttribute("station", form);
+                    }
+                    model.addAttribute("formMode", "edit");
+                    model.addAttribute("stationId", station.getId());
+                    model.addAttribute("stationCode", station.getCode());
+                    return "admin/stationForm";
+                })
+                .orElseGet(() -> {
+                    redirectAttributes.addFlashAttribute("stationFlash", "স্টেশনটি খুঁজে পাওয়া যায়নি।");
+                    redirectAttributes.addFlashAttribute("stationFlashVariant", "error");
+                    return "redirect:/admin/stations";
+                });
+    }
+
+    @PostMapping("/stations/{id}/update")
+    public String updateStation(@PathVariable("id") Long id,
+                                @Valid @ModelAttribute("station") StationForm form,
+                                BindingResult bindingResult,
+                                RedirectAttributes redirectAttributes) {
+        if (bindingResult.hasErrors()) {
+            Map<String, String> errors = bindingResult.getFieldErrors().stream()
+                    .collect(Collectors.toMap(FieldError::getField, FieldError::getDefaultMessage, (a, b) -> a));
+            redirectAttributes.addFlashAttribute("station", form);
+            redirectAttributes.addFlashAttribute("errors", errors);
+            return "redirect:/admin/stations/" + id + "/edit";
+        }
+        return stationRepository.findById(id)
+                .map(station -> {
+                    station.setName(form.getName().trim());
+                    station.setLocation(form.getLocation().trim());
+                    stationRepository.save(station);
+                    redirectAttributes.addFlashAttribute("stationFlash",
+                            "স্টেশন \"" + station.getName() + "\" আপডেট করা হয়েছে।");
+                    redirectAttributes.addFlashAttribute("stationFlashVariant", "success");
+                    return "redirect:/admin/stations";
+                })
+                .orElseGet(() -> {
+                    redirectAttributes.addFlashAttribute("stationFlash", "স্টেশনটি খুঁজে পাওয়া যায়নি।");
+                    redirectAttributes.addFlashAttribute("stationFlashVariant", "error");
+                    return "redirect:/admin/stations";
+                });
     }
 
     @PostMapping("/stations/{id}/delete")
