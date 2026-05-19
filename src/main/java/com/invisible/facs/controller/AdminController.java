@@ -3,6 +3,9 @@ package com.invisible.facs.controller;
 import com.invisible.facs.model.Role;
 import com.invisible.facs.model.Station;
 import com.invisible.facs.model.StationForm;
+import com.invisible.facs.model.User;
+import com.invisible.facs.model.UserProfile;
+import com.invisible.facs.model.Vehicle;
 import com.invisible.facs.repository.StationRepository;
 import com.invisible.facs.repository.UserRepository;
 import com.invisible.facs.repository.VehicleRepository;
@@ -13,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
@@ -26,10 +30,14 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.security.Principal;
 import java.security.SecureRandom;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Controller
@@ -38,8 +46,14 @@ import java.util.stream.Collectors;
 public class AdminController {
 
     private static final int STATIONS_PAGE_SIZE = 10;
+    private static final int VEHICLES_PAGE_SIZE = 10;
     private static final int STATION_CODE_MAX_ATTEMPTS = 25;
     private static final SecureRandom STATION_CODE_RNG = new SecureRandom();
+    private static final String[] BANGLA_MONTHS = {
+            "জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন",
+            "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"
+    };
+    private static final ZoneId DHAKA_ZONE = ZoneId.of("Asia/Dhaka");
 
     private final UserRepository userRepository;
     private final VehicleRepository vehicleRepository;
@@ -190,6 +204,152 @@ public class AdminController {
                     redirectAttributes.addFlashAttribute("stationFlashVariant", "error");
                 });
         return "redirect:/admin/stations";
+    }
+
+    @GetMapping("/vehicles")
+    @Transactional(readOnly = true)
+    public String vehicles(@RequestParam(name = "page", defaultValue = "0") int page, Model model) {
+        int safePage = Math.max(page, 0);
+        Page<Vehicle> result = vehicleRepository.findAll(
+                PageRequest.of(safePage, VEHICLES_PAGE_SIZE, Sort.by(Sort.Direction.DESC, "id")));
+
+        List<Map<String, Object>> rows = new ArrayList<>();
+        for (Vehicle v : result.getContent()) {
+            Map<String, Object> row = new HashMap<>();
+            row.put("id", v.getId());
+            row.put("plateNumber", v.getPlateNumber());
+            row.put("brand", v.getBrand());
+            row.put("model", v.getModel());
+            row.put("typeLabel", vehicleTypeLabel(v.getVehicleType()));
+            row.put("typeIcon", vehicleTypeIcon(v.getVehicleType()));
+            row.put("ownerName", resolveOwnerName(v.getUser()));
+            rows.add(row);
+        }
+
+        long total = result.getTotalElements();
+        int shown = result.getNumberOfElements();
+        long fromIdx = total == 0 ? 0 : (long) result.getNumber() * VEHICLES_PAGE_SIZE + 1;
+        long toIdx = total == 0 ? 0 : fromIdx + shown - 1;
+
+        model.addAttribute("vehicles", rows);
+        model.addAttribute("vehiclesTotal", BanglaDigits.convert(String.valueOf(total)));
+        model.addAttribute("vehiclesFromIdx", BanglaDigits.convert(String.valueOf(fromIdx)));
+        model.addAttribute("vehiclesToIdx", BanglaDigits.convert(String.valueOf(toIdx)));
+        model.addAttribute("vehiclesPage", result.getNumber());
+        model.addAttribute("vehiclesHasPrev", result.hasPrevious());
+        model.addAttribute("vehiclesHasNext", result.hasNext());
+        return "admin/vehicles";
+    }
+
+    @GetMapping("/vehicles/{id}")
+    @Transactional(readOnly = true)
+    public String vehicleDetail(@PathVariable("id") Long id,
+                                Model model,
+                                RedirectAttributes redirectAttributes) {
+        Optional<Vehicle> opt = vehicleRepository.findById(id);
+        if (opt.isEmpty()) {
+            redirectAttributes.addFlashAttribute("vehicleFlash", "যানবাহনটি খুঁজে পাওয়া যায়নি।");
+            redirectAttributes.addFlashAttribute("vehicleFlashVariant", "error");
+            return "redirect:/admin/vehicles";
+        }
+        Vehicle v = opt.get();
+
+        String modelWithYear = v.getModel();
+        if (v.getManufactureYear() != null && !v.getManufactureYear().isBlank()) {
+            String year = BanglaDigits.convert(v.getManufactureYear().trim());
+            modelWithYear = (modelWithYear == null || modelWithYear.isBlank())
+                    ? "(" + year + ")"
+                    : modelWithYear + " (" + year + ")";
+        }
+
+        Map<String, Object> view = new HashMap<>();
+        view.put("id", v.getId());
+        view.put("plateNumber", v.getPlateNumber());
+        view.put("brand", v.getBrand());
+        view.put("model", v.getModel());
+        view.put("modelWithYear", modelWithYear);
+        view.put("typeLabel", vehicleTypeLabel(v.getVehicleType()));
+        view.put("typeIcon", vehicleTypeIcon(v.getVehicleType()));
+        view.put("color", v.getColor());
+        view.put("chassisNumber", v.getChassisNumber());
+        view.put("engineNumber", v.getEngineNumber());
+        view.put("plateImageUrl", v.getPlateImagePath());
+        view.put("registeredOn", formatBanglaDate(v.getCreatedAt()));
+
+        Map<String, Object> owner = new HashMap<>();
+        User u = v.getUser();
+        if (u != null) {
+            owner.put("mobile", BanglaDigits.formatMobile(u.getMobile()));
+            UserProfile p = u.getProfile();
+            if (p != null) {
+                owner.put("name", p.getName());
+                owner.put("address", p.getAddress());
+                owner.put("nidNumber", p.getNidNumber() == null ? null : BanglaDigits.convert(p.getNidNumber()));
+                owner.put("licenseNumber", p.getLicenseNumber());
+            } else if (u.getName() != null) {
+                owner.put("name", u.getName());
+            }
+        }
+        view.put("owner", owner);
+
+        model.addAttribute("vehicle", view);
+        return "admin/vehicleDetail";
+    }
+
+    @PostMapping("/vehicles/{id}/delete")
+    public String deleteVehicle(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
+        vehicleRepository.findById(id).ifPresentOrElse(
+                vehicle -> {
+                    String label = vehicle.getPlateNumber();
+                    vehicleRepository.delete(vehicle);
+                    redirectAttributes.addFlashAttribute("vehicleFlash",
+                            "যানবাহন \"" + label + "\" মুছে ফেলা হয়েছে।");
+                    redirectAttributes.addFlashAttribute("vehicleFlashVariant", "success");
+                },
+                () -> {
+                    redirectAttributes.addFlashAttribute("vehicleFlash", "যানবাহনটি খুঁজে পাওয়া যায়নি।");
+                    redirectAttributes.addFlashAttribute("vehicleFlashVariant", "error");
+                });
+        return "redirect:/admin/vehicles";
+    }
+
+    private String vehicleTypeLabel(String type) {
+        if (type == null) return "—";
+        return switch (type) {
+            case "car" -> "কার";
+            case "truck" -> "ট্রাক";
+            case "bike" -> "বাইক";
+            default -> type;
+        };
+    }
+
+    private String vehicleTypeIcon(String type) {
+        if (type == null) return "car";
+        return switch (type) {
+            case "truck" -> "truck";
+            case "bike" -> "bike";
+            default -> "car";
+        };
+    }
+
+    private String resolveOwnerName(User user) {
+        if (user == null) return null;
+        UserProfile p = user.getProfile();
+        if (p != null && p.getName() != null && !p.getName().isBlank()) {
+            return p.getName();
+        }
+        if (user.getName() != null && !user.getName().isBlank()) {
+            return user.getName();
+        }
+        return BanglaDigits.formatMobile(user.getMobile());
+    }
+
+    private String formatBanglaDate(Instant instant) {
+        if (instant == null) return null;
+        LocalDate date = instant.atZone(DHAKA_ZONE).toLocalDate();
+        String day = BanglaDigits.convert(String.valueOf(date.getDayOfMonth()));
+        String year = BanglaDigits.convert(String.valueOf(date.getYear()));
+        return day + " " + BANGLA_MONTHS[date.getMonthValue() - 1] + ", " + year;
     }
 
     private String generateUniqueStationCode() {
