@@ -18,6 +18,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -76,7 +77,7 @@ public class AdminController {
     public String stations(@RequestParam(name = "page", defaultValue = "0") int page, Model model) {
         int safePage = Math.max(page, 0);
         Page<Station> result = stationRepository.findAll(
-                PageRequest.of(safePage, STATIONS_PAGE_SIZE, Sort.by(Sort.Direction.ASC, "id")));
+                PageRequest.of(safePage, STATIONS_PAGE_SIZE, Sort.by(Sort.Direction.DESC, "id")));
 
         long total = result.getTotalElements();
         int shown = result.getNumberOfElements();
@@ -118,6 +119,22 @@ public class AdminController {
                 .location(form.getLocation().trim())
                 .build();
         stationRepository.save(station);
+        return "redirect:/admin/stations";
+    }
+
+    @PostMapping("/stations/{id}/delete")
+    public String deleteStation(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
+        stationRepository.findById(id).ifPresentOrElse(
+                station -> {
+                    stationRepository.delete(station);
+                    redirectAttributes.addFlashAttribute("stationFlash",
+                            "স্টেশন \"" + station.getName() + "\" মুছে ফেলা হয়েছে।");
+                    redirectAttributes.addFlashAttribute("stationFlashVariant", "success");
+                },
+                () -> {
+                    redirectAttributes.addFlashAttribute("stationFlash", "স্টেশনটি খুঁজে পাওয়া যায়নি।");
+                    redirectAttributes.addFlashAttribute("stationFlashVariant", "error");
+                });
         return "redirect:/admin/stations";
     }
 

@@ -16,7 +16,7 @@
     </jsp:attribute>
 
     <jsp:body>
-        <section class="flex flex-col gap-6 max-w-7xl">
+        <section class="flex flex-col gap-6 w-full">
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 <my:statCard label="মোট সক্রিয় ব্যবহারকারী" value="${activeUsers}" icon="users"/>
