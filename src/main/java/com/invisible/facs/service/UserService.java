@@ -175,4 +175,34 @@ public class UserService {
     public String getResetMobile(HttpSession session) {
         return (String) session.getAttribute(S_MOBILE);
     }
+
+    public enum ChangePasswordResult {
+        SUCCESS, INVALID_CURRENT, WEAK, MISMATCH, SAME_AS_CURRENT, USER_MISSING
+    }
+
+    @Transactional
+    public ChangePasswordResult changePassword(String mobile, String currentPassword,
+                                               String newPassword, String confirmPassword) {
+        if (mobile == null) return ChangePasswordResult.USER_MISSING;
+        Optional<User> userOpt = userRepository.findByMobile(mobile);
+        if (userOpt.isEmpty()) return ChangePasswordResult.USER_MISSING;
+        User user = userOpt.get();
+
+        if (currentPassword == null || !passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
+            return ChangePasswordResult.INVALID_CURRENT;
+        }
+        if (!PasswordRules.isValid(newPassword)) {
+            return ChangePasswordResult.WEAK;
+        }
+        if (!newPassword.equals(confirmPassword)) {
+            return ChangePasswordResult.MISMATCH;
+        }
+        if (passwordEncoder.matches(newPassword, user.getPasswordHash())) {
+            return ChangePasswordResult.SAME_AS_CURRENT;
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        return ChangePasswordResult.SUCCESS;
+    }
 }

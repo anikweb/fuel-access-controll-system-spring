@@ -29,7 +29,7 @@
     </jsp:attribute>
 
     <jsp:attribute name="sidebarFooter">
-        <my:sidebarNavItem href="/admin/change-password" icon="gear" label="পাসওয়ার্ড পরিবর্তন"/>
+        <my:sidebarNavItem href="/change-password" icon="gear" label="পাসওয়ার্ড পরিবর্তন"/>
     </jsp:attribute>
 
     <jsp:body>
