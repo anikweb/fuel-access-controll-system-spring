@@ -8,6 +8,7 @@ import com.invisible.facs.repository.UserRepository;
 import com.invisible.facs.service.UserService;
 import com.invisible.facs.util.BanglaDateTime;
 import com.invisible.facs.util.BanglaDigits;
+import com.invisible.facs.util.TransactionDisplay;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -18,8 +19,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.Principal;
@@ -94,9 +93,9 @@ public class DashboardController {
             row.put("createdAtDisplay", BanglaDateTime.formatDateTime(t.getCreatedAt()));
             row.put("vehiclePlate", t.getVehicle() == null ? "—" : BanglaDigits.convert(t.getVehicle().getPlateNumber()));
             row.put("stationName", t.getStation() == null ? "—" : t.getStation().getName());
-            row.put("amountDisplay", formatLitersShort(t.getFuelLiters()));
+            row.put("amountDisplay", TransactionDisplay.formatLitersShort(t.getFuelLiters()));
             row.put("statusLabel", statusLabel(t.getStatus()));
-            row.put("statusBadgeClass", statusBadge(t.getStatus()));
+            row.put("statusBadgeClass", TransactionDisplay.statusBadgeClass(t.getStatus()));
             rows.add(row);
         }
 
@@ -130,26 +129,12 @@ public class DashboardController {
         return sb.toString();
     }
 
-    private static String formatLitersShort(BigDecimal liters) {
-        if (liters == null) return "—";
-        return BanglaDigits.convert(liters.setScale(2, RoundingMode.HALF_UP).toPlainString()) + " L";
-    }
-
     private static String statusLabel(TransactionStatus status) {
         if (status == null) return "—";
         return switch (status) {
             case SUCCESS -> "সফল";
             case PENDING -> "অপেক্ষমান";
             case CANCELLED -> "বাতিল";
-        };
-    }
-
-    private static String statusBadge(TransactionStatus status) {
-        if (status == null) return "bg-gray-100 text-gray-700";
-        return switch (status) {
-            case SUCCESS -> "bg-brand text-white";
-            case PENDING -> "bg-amber-400 text-amber-950";
-            case CANCELLED -> "bg-brand-red text-white";
         };
     }
 }

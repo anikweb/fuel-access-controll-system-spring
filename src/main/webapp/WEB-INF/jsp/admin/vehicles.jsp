@@ -63,7 +63,7 @@
                 <jsp:body>
                     <c:forEach items="${vehicles}" var="v">
                         <my:dataTableRow>
-                            <my:dataTableBodyCell>
+                            <my:dataTableBodyCell label="যানবাহনের তথ্য">
                                 <a href="<c:url value='/admin/vehicles/${v.id}'/>"
                                    class="group flex items-center gap-4 -my-1">
                                     <span class="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-brand/5 text-brand shrink-0 [&>svg]:w-6 [&>svg]:h-6">
@@ -77,9 +77,9 @@
                                     </span>
                                 </a>
                             </my:dataTableBodyCell>
-                            <my:dataTableBodyCell>${empty v.ownerName ? '—' : v.ownerName}</my:dataTableBodyCell>
-                            <my:dataTableBodyCell tone="brand" bold="true">${v.typeLabel}</my:dataTableBodyCell>
-                            <my:dataTableBodyCell>
+                            <my:dataTableBodyCell label="মালিকের নাম">${empty v.ownerName ? '—' : v.ownerName}</my:dataTableBodyCell>
+                            <my:dataTableBodyCell label="ধরন" tone="brand" bold="true">${v.typeLabel}</my:dataTableBodyCell>
+                            <my:dataTableBodyCell label="অ্যাকশন">
                                 <div class="flex items-center justify-end gap-3">
                                     <button type="button"
                                             class="inline-flex items-center justify-center w-10 h-10 rounded-md text-gray-500 hover:bg-gray-100 hover:text-brand-red transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/40 [&>svg]:h-5 [&>svg]:w-5"

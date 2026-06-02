@@ -143,9 +143,9 @@
                 <jsp:body>
                     <c:forEach items="${transactions}" var="t">
                         <my:dataTableRow>
-                            <my:dataTableBodyCell tone="brand" bold="true" mono="true" nowrap="true">${t.displayCode}</my:dataTableBodyCell>
-                            <my:dataTableBodyCell tone="muted" nowrap="true">${t.createdAtDisplay}</my:dataTableBodyCell>
-                            <my:dataTableBodyCell>
+                            <my:dataTableBodyCell label="লেনদেন আইডি" tone="brand" bold="true" mono="true" nowrap="true">${t.displayCode}</my:dataTableBodyCell>
+                            <my:dataTableBodyCell label="তারিখ ও সময়" tone="muted" nowrap="true">${t.createdAtDisplay}</my:dataTableBodyCell>
+                            <my:dataTableBodyCell label="যানবাহন প্লেট">
                                 <span class="inline-flex items-center gap-2">
                                     <span class="inline-flex items-center justify-center w-8 h-8 rounded-md bg-brand/5 text-brand shrink-0 [&>svg]:w-4 [&>svg]:h-4">
                                         <my:icon name="truck"/>
@@ -153,13 +153,13 @@
                                     <span class="text-sm font-medium text-gray-900"><c:out value="${t.vehiclePlate}"/></span>
                                 </span>
                             </my:dataTableBodyCell>
-                            <my:dataTableBodyCell bold="true" mono="true" nowrap="true">${t.amountDisplay}</my:dataTableBodyCell>
-                            <my:dataTableBodyCell>
+                            <my:dataTableBodyCell label="পরিমাণ" bold="true" mono="true" nowrap="true">${t.amountDisplay}</my:dataTableBodyCell>
+                            <my:dataTableBodyCell label="ধরন">
                                 <span class="inline-flex items-center px-3 py-1 rounded-md text-xs font-semibold ${t.fuelTypeBadgeClass}">
                                     <c:out value="${t.fuelTypeLabel}"/>
                                 </span>
                             </my:dataTableBodyCell>
-                            <my:dataTableBodyCell align="right" nowrap="true">
+                            <my:dataTableBodyCell label="অবস্থা" align="right" nowrap="true">
                                 <span class="inline-flex items-center gap-1.5 text-sm font-medium ${t.statusTone}">
                                     <my:icon name="${t.statusIcon}"/>
                                     <c:out value="${t.statusLabel}"/>

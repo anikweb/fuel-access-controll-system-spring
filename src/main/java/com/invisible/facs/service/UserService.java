@@ -11,6 +11,7 @@ import com.invisible.facs.util.BanglaDateTime;
 import com.invisible.facs.util.BanglaDigits;
 import com.invisible.facs.util.MobileNumbers;
 import com.invisible.facs.util.PasswordRules;
+import com.invisible.facs.util.TransactionDisplay;
 import com.invisible.facs.model.Vehicle;
 import com.invisible.facs.repository.VehicleRepository;
 import jakarta.servlet.http.HttpSession;
@@ -105,7 +106,7 @@ public class UserService {
             card.put("plateDisplay", BanglaDigits.convert(v.getPlateNumber()));
             card.put("brand", v.getBrand());
             card.put("model", v.getModel());
-            card.put("type", vehicleTypeLabel(v.getVehicleType()));
+            card.put("type", TransactionDisplay.vehicleTypeLabel(v.getVehicleType()));
             card.put("color", v.getColor());
             card.put("year", v.getManufactureYear());
             card.put("plateImageUrl", v.getPlateImagePath());
@@ -137,9 +138,9 @@ public class UserService {
             row.put("displayCode", "#" + t.getCode());
             row.put("createdAtDisplay", BanglaDateTime.formatDateTime(t.getCreatedAt()));
             row.put("stationName", t.getStation() == null ? "—" : t.getStation().getName());
-            row.put("amountDisplay", formatLitersShort(t.getFuelLiters()));
+            row.put("amountDisplay", TransactionDisplay.formatLitersShort(t.getFuelLiters()));
             row.put("statusLabel", transactionStatusLabel(t.getStatus()));
-            row.put("statusBadgeClass", transactionStatusBadge(t.getStatus()));
+            row.put("statusBadgeClass", TransactionDisplay.statusBadgeClass(t.getStatus()));
             recentRows.add(row);
         }
 
@@ -186,36 +187,12 @@ public class UserService {
         return BanglaDigits.convert(liters.setScale(2, RoundingMode.HALF_UP).toPlainString()) + " লিটার";
     }
 
-    private static String formatLitersShort(BigDecimal liters) {
-        if (liters == null) return "—";
-        return BanglaDigits.convert(liters.setScale(2, RoundingMode.HALF_UP).toPlainString()) + " L";
-    }
-
-    private static String vehicleTypeLabel(String type) {
-        if (type == null) return "—";
-        return switch (type) {
-            case "car" -> "কার";
-            case "truck" -> "ট্রাক";
-            case "bike" -> "বাইক";
-            default -> type;
-        };
-    }
-
     private static String transactionStatusLabel(TransactionStatus status) {
         if (status == null) return "—";
         return switch (status) {
             case SUCCESS -> "সফল";
             case PENDING -> "অপেক্ষমান";
             case CANCELLED -> "বাতিল";
-        };
-    }
-
-    private static String transactionStatusBadge(TransactionStatus status) {
-        if (status == null) return "bg-gray-100 text-gray-700";
-        return switch (status) {
-            case SUCCESS -> "bg-brand text-white";
-            case PENDING -> "bg-amber-400 text-amber-950";
-            case CANCELLED -> "bg-brand-red text-white";
         };
     }
 

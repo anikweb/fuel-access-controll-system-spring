@@ -34,8 +34,8 @@
             </c:if>
         </header>
     </c:if>
-    <div class="overflow-x-auto">
-        <table class="w-full text-sm">
+    <div class="md:overflow-x-auto">
+        <table class="responsive-table w-full text-sm">
             <thead class="bg-gray-200 text-gray-700">
                 <tr class="text-left text-sm font-medium">
                     <jsp:invoke fragment="header"/>
@@ -44,7 +44,7 @@
             <tbody class="divide-y divide-gray-100">
                 <c:choose>
                     <c:when test="${isEmpty}">
-                        <tr>
+                        <tr class="responsive-table-empty">
                             <td colspan="${emptyColspan}" class="px-6 py-12 text-center text-sm text-gray-500">
                                 ${empty emptyMessage ? 'কোনো তথ্য পাওয়া যায়নি।' : emptyMessage}
                             </td>

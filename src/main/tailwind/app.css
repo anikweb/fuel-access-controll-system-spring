@@ -37,3 +37,65 @@
         cursor: pointer;
     }
 }
+
+/* Responsive tables: collapse to label/value cards below md. */
+@media (max-width: 767.98px) {
+    .responsive-table thead {
+        display: none;
+    }
+    .responsive-table,
+    .responsive-table tbody,
+    .responsive-table tr,
+    .responsive-table td {
+        display: block;
+        width: 100%;
+    }
+    .responsive-table tbody.divide-y > :not([hidden]) ~ :not([hidden]) {
+        border-top-width: 0;
+    }
+    .responsive-table tbody > tr {
+        background-color: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.75rem;
+        margin: 0.625rem 0;
+        padding: 0.25rem 0.75rem;
+        box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+    }
+    .responsive-table tbody > tr.responsive-table-empty {
+        padding: 0;
+        background: transparent;
+        border: 0;
+        box-shadow: none;
+    }
+    .responsive-table tbody > tr.responsive-table-empty td {
+        padding: 2rem 0.75rem !important;
+        text-align: center !important;
+    }
+    .responsive-table td {
+        padding: 0.625rem 0 !important;
+        text-align: right !important;
+        white-space: normal !important;
+        border-bottom: 1px solid #f3f4f6;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        min-height: 0;
+    }
+    .responsive-table tbody > tr td:last-child {
+        border-bottom: 0;
+    }
+    .responsive-table td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        font-size: 0.6875rem;
+        color: #6b7280;
+        letter-spacing: 0.02em;
+        text-align: left;
+        flex-shrink: 0;
+    }
+    .responsive-table td[data-label=""]::before,
+    .responsive-table td:not([data-label])::before {
+        content: none;
+    }
+}

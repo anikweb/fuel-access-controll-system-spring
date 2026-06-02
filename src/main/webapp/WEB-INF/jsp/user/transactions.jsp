@@ -115,9 +115,9 @@
                 <jsp:body>
                     <c:forEach items="${transactions}" var="t">
                         <my:dataTableRow>
-                            <my:dataTableBodyCell tone="brand" bold="true" mono="true" nowrap="true">${t.displayCode}</my:dataTableBodyCell>
-                            <my:dataTableBodyCell tone="muted" nowrap="true">${t.createdAtDisplay}</my:dataTableBodyCell>
-                            <my:dataTableBodyCell>
+                            <my:dataTableBodyCell label="লেনদেন আইডি" tone="brand" bold="true" mono="true" nowrap="true">${t.displayCode}</my:dataTableBodyCell>
+                            <my:dataTableBodyCell label="তারিখ ও সময়" tone="muted" nowrap="true">${t.createdAtDisplay}</my:dataTableBodyCell>
+                            <my:dataTableBodyCell label="যানবাহন">
                                 <span class="inline-flex items-center gap-2">
                                     <span class="inline-flex items-center justify-center w-8 h-8 rounded-md bg-brand/5 text-brand shrink-0 [&>svg]:w-4 [&>svg]:h-4">
                                         <my:icon name="truck"/>
@@ -125,8 +125,8 @@
                                     <span class="text-sm font-medium text-gray-900"><c:out value="${t.vehiclePlate}"/></span>
                                 </span>
                             </my:dataTableBodyCell>
-                            <my:dataTableBodyCell tone="muted"><c:out value="${t.stationName}"/></my:dataTableBodyCell>
-                            <my:dataTableBodyCell align="right" bold="true" mono="true" nowrap="true">${t.amountDisplay}</my:dataTableBodyCell>
+                            <my:dataTableBodyCell label="স্টেশন" tone="muted"><c:out value="${t.stationName}"/></my:dataTableBodyCell>
+                            <my:dataTableBodyCell label="পরিমাণ" align="right" bold="true" mono="true" nowrap="true">${t.amountDisplay}</my:dataTableBodyCell>
                         </my:dataTableRow>
                     </c:forEach>
                 </jsp:body>

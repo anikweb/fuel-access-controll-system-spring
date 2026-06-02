@@ -3,6 +3,7 @@
 <%@ attribute name="align" required="false" %>
 <%@ attribute name="width" required="false" %>
 <%@ attribute name="tone" required="false" %>
+<%@ attribute name="label" required="false" %>
 <%@ attribute name="bold" required="false" type="java.lang.Boolean" %>
 <%@ attribute name="mono" required="false" type="java.lang.Boolean" %>
 <%@ attribute name="nowrap" required="false" type="java.lang.Boolean" %>
@@ -13,6 +14,7 @@
 <c:set var="monoClass" value="${mono ? 'tabular-nums' : ''}"/>
 <c:set var="wrapClass" value="${nowrap ? 'whitespace-nowrap' : ''}"/>
 
-<td class="px-6 py-6 ${alignClass} ${toneClass} ${weightClass} ${monoClass} ${wrapClass} ${empty width ? '' : width}">
+<td data-label="<c:out value='${label}'/>"
+    class="px-6 py-6 ${alignClass} ${toneClass} ${weightClass} ${monoClass} ${wrapClass} ${empty width ? '' : width}">
     <jsp:doBody/>
 </td>

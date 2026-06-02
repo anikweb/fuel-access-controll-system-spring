@@ -45,17 +45,17 @@
                 <jsp:body>
                     <c:forEach items="${recentTransactions}" var="t">
                         <my:dataTableRow>
-                            <my:dataTableBodyCell tone="brand" bold="true" nowrap="true">#${t.id}</my:dataTableBodyCell>
-                            <my:dataTableBodyCell tone="muted">${t.when}</my:dataTableBodyCell>
-                            <my:dataTableBodyCell>
+                            <my:dataTableBodyCell label="লেনদেন আইডি" tone="brand" bold="true" nowrap="true">#${t.id}</my:dataTableBodyCell>
+                            <my:dataTableBodyCell label="তারিখ ও সময়" tone="muted">${t.when}</my:dataTableBodyCell>
+                            <my:dataTableBodyCell label="যানবাহন">
                                 <span class="inline-flex items-center gap-2 text-gray-800">
                                     <span class="text-gray-400"><my:icon name="truck"/></span>
                                     <span>${t.vehicle}</span>
                                 </span>
                             </my:dataTableBodyCell>
-                            <my:dataTableBodyCell tone="muted">${t.station}</my:dataTableBodyCell>
-                            <my:dataTableBodyCell align="right" bold="true" mono="true" nowrap="true">${t.qty}</my:dataTableBodyCell>
-                            <my:dataTableBodyCell align="center">
+                            <my:dataTableBodyCell label="স্টেশন" tone="muted">${t.station}</my:dataTableBodyCell>
+                            <my:dataTableBodyCell label="পরিমাণ" align="right" bold="true" mono="true" nowrap="true">${t.qty}</my:dataTableBodyCell>
+                            <my:dataTableBodyCell label="অবস্থা" align="center">
                                 <my:statusBadge label="${t.statusLabel}" variant="${t.statusVariant}"/>
                             </my:dataTableBodyCell>
                         </my:dataTableRow>

@@ -130,8 +130,8 @@
                     </a>
                 </header>
 
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
+                <div class="md:overflow-x-auto">
+                    <table class="responsive-table w-full text-sm">
                         <thead class="bg-gray-100 text-gray-700">
                             <tr class="text-left text-[13px] font-medium">
                                 <th class="px-6 py-3 font-semibold">লেনদেন আইডি</th>
@@ -144,7 +144,7 @@
                         <tbody class="divide-y divide-gray-100">
                             <c:choose>
                                 <c:when test="${empty view.recentTransactions}">
-                                    <tr>
+                                    <tr class="responsive-table-empty">
                                         <td colspan="5" class="px-6 py-12 text-center text-sm text-gray-500">
                                             এখনো কোনো লেনদেন নেই।
                                         </td>
@@ -153,11 +153,11 @@
                                 <c:otherwise>
                                     <c:forEach items="${view.recentTransactions}" var="t">
                                         <tr>
-                                            <td class="px-6 py-4 align-middle whitespace-nowrap text-sm font-semibold text-brand tabular-nums">${t.displayCode}</td>
-                                            <td class="px-6 py-4 align-middle whitespace-nowrap text-sm text-gray-700">${t.createdAtDisplay}</td>
-                                            <td class="px-6 py-4 align-middle text-sm text-gray-700"><c:out value="${t.stationName}"/></td>
-                                            <td class="px-6 py-4 align-middle whitespace-nowrap text-sm font-semibold text-gray-900 tabular-nums">${t.amountDisplay}</td>
-                                            <td class="px-6 py-4 align-middle whitespace-nowrap text-right">
+                                            <td data-label="লেনদেন আইডি" class="px-6 py-4 align-middle whitespace-nowrap text-sm font-semibold text-brand tabular-nums">${t.displayCode}</td>
+                                            <td data-label="তারিখ ও সময়" class="px-6 py-4 align-middle whitespace-nowrap text-sm text-gray-700">${t.createdAtDisplay}</td>
+                                            <td data-label="স্টেশন" class="px-6 py-4 align-middle text-sm text-gray-700"><c:out value="${t.stationName}"/></td>
+                                            <td data-label="পরিমাণ" class="px-6 py-4 align-middle whitespace-nowrap text-sm font-semibold text-gray-900 tabular-nums">${t.amountDisplay}</td>
+                                            <td data-label="অবস্থা" class="px-6 py-4 align-middle whitespace-nowrap text-right">
                                                 <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${t.statusBadgeClass}">
                                                     <c:out value="${t.statusLabel}"/>
                                                 </span>

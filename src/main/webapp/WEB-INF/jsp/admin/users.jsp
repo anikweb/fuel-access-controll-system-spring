@@ -64,7 +64,7 @@
                 <jsp:body>
                     <c:forEach items="${panelUsers}" var="u">
                         <my:dataTableRow>
-                            <my:dataTableBodyCell>
+                            <my:dataTableBodyCell label="নাম ও আইডি">
                                 <div class="flex items-center gap-4 -my-1">
                                     <c:choose>
                                         <c:when test="${not empty u.photoUrl}">
@@ -84,14 +84,14 @@
                                     </span>
                                 </div>
                             </my:dataTableBodyCell>
-                            <my:dataTableBodyCell tone="muted">${u.mobile}</my:dataTableBodyCell>
-                            <my:dataTableBodyCell>
+                            <my:dataTableBodyCell label="মোবাইল" tone="muted">${u.mobile}</my:dataTableBodyCell>
+                            <my:dataTableBodyCell label="ভূমিকা">
                                 <span class="inline-flex items-center px-3 py-1 rounded-md text-xs font-medium ${u.roleBadgeClass}">
                                     <c:out value="${u.roleLabel}"/>
                                 </span>
                             </my:dataTableBodyCell>
-                            <my:dataTableBodyCell tone="muted">${u.registeredOn}</my:dataTableBodyCell>
-                            <my:dataTableBodyCell>
+                            <my:dataTableBodyCell label="নিবন্ধনের তারিখ" tone="muted">${u.registeredOn}</my:dataTableBodyCell>
+                            <my:dataTableBodyCell label="অ্যাকশন">
                                 <div class="flex items-center justify-end gap-3">
                                     <a href="<c:url value='/admin/users/${u.id}/edit'/>"
                                        class="inline-flex items-center justify-center w-10 h-10 rounded-md text-gray-500 hover:bg-gray-100 hover:text-brand transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30 [&>svg]:h-5 [&>svg]:w-5"

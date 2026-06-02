@@ -63,10 +63,10 @@
                 <jsp:body>
                     <c:forEach items="${stations}" var="s">
                         <my:dataTableRow>
-                            <my:dataTableBodyCell align="center" tone="brand" bold="true" mono="true" nowrap="true">${s.code}</my:dataTableBodyCell>
-                            <my:dataTableBodyCell>${s.name}</my:dataTableBodyCell>
-                            <my:dataTableBodyCell tone="muted">${s.location}</my:dataTableBodyCell>
-                            <my:dataTableBodyCell>
+                            <my:dataTableBodyCell label="আইডি" align="center" tone="brand" bold="true" mono="true" nowrap="true">${s.code}</my:dataTableBodyCell>
+                            <my:dataTableBodyCell label="স্টেশনের নাম">${s.name}</my:dataTableBodyCell>
+                            <my:dataTableBodyCell label="অবস্থান" tone="muted">${s.location}</my:dataTableBodyCell>
+                            <my:dataTableBodyCell label="অ্যাকশন">
                                 <div class="flex items-center justify-end gap-3">
                                     <a href="<c:url value='/admin/stations/${s.id}/edit'/>"
                                        class="inline-flex items-center justify-center w-10 h-10 rounded-md text-gray-500 hover:bg-gray-100 hover:text-brand transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30 [&>svg]:h-5 [&>svg]:w-5"

@@ -18,6 +18,7 @@ import com.invisible.facs.util.BanglaDateTime;
 import com.invisible.facs.util.BanglaDigits;
 import com.invisible.facs.util.MobileNumbers;
 import com.invisible.facs.util.PasswordRules;
+import com.invisible.facs.util.TransactionDisplay;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -37,8 +38,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.Principal;
@@ -100,7 +99,7 @@ public class AdminController {
             row.put("when", BanglaDateTime.formatDateTime(t.getCreatedAt()));
             row.put("vehicle", t.getVehicle() == null ? "—" : t.getVehicle().getPlateNumber());
             row.put("station", t.getStation() == null ? "—" : t.getStation().getName());
-            row.put("qty", formatFuelLiters(t.getFuelLiters()));
+            row.put("qty", TransactionDisplay.formatLitersShort(t.getFuelLiters()));
             row.put("statusLabel", transactionStatusLabel(t.getStatus()));
             row.put("statusVariant", transactionStatusVariant(t.getStatus()));
             recentRows.add(row);
@@ -261,7 +260,7 @@ public class AdminController {
             row.put("plateNumber", v.getPlateNumber());
             row.put("brand", v.getBrand());
             row.put("model", v.getModel());
-            row.put("typeLabel", vehicleTypeLabel(v.getVehicleType()));
+            row.put("typeLabel", TransactionDisplay.vehicleTypeLabel(v.getVehicleType()));
             row.put("typeIcon", vehicleTypeIcon(v.getVehicleType()));
             row.put("ownerName", resolveOwnerName(v.getUser()));
             rows.add(row);
@@ -309,7 +308,7 @@ public class AdminController {
         view.put("brand", v.getBrand());
         view.put("model", v.getModel());
         view.put("modelWithYear", modelWithYear);
-        view.put("typeLabel", vehicleTypeLabel(v.getVehicleType()));
+        view.put("typeLabel", TransactionDisplay.vehicleTypeLabel(v.getVehicleType()));
         view.put("typeIcon", vehicleTypeIcon(v.getVehicleType()));
         view.put("color", v.getColor());
         view.put("chassisNumber", v.getChassisNumber());
@@ -601,9 +600,9 @@ public class AdminController {
             row.put("createdAtDisplay", BanglaDateTime.formatDateTime(t.getCreatedAt()));
             row.put("vehiclePlate", t.getVehicle() == null ? null : t.getVehicle().getPlateNumber());
             row.put("stationName", t.getStation() == null ? null : t.getStation().getName());
-            row.put("amountDisplay", formatFuelLiters(t.getFuelLiters()));
+            row.put("amountDisplay", TransactionDisplay.formatLitersShort(t.getFuelLiters()));
             row.put("statusLabel", transactionStatusLabel(t.getStatus()));
-            row.put("statusBadgeClass", transactionStatusBadge(t.getStatus()));
+            row.put("statusBadgeClass", TransactionDisplay.statusBadgeClass(t.getStatus()));
             rows.add(row);
         }
 
@@ -646,20 +645,6 @@ public class AdminController {
             case PENDING -> "অপেক্ষমান";
             case CANCELLED -> "বাতিল";
         };
-    }
-
-    private String transactionStatusBadge(TransactionStatus status) {
-        if (status == null) return "bg-gray-100 text-gray-700";
-        return switch (status) {
-            case SUCCESS -> "bg-brand text-white";
-            case PENDING -> "bg-amber-400 text-amber-950";
-            case CANCELLED -> "bg-brand-red text-white";
-        };
-    }
-
-    private String formatFuelLiters(BigDecimal liters) {
-        if (liters == null) return "—";
-        return BanglaDigits.convert(liters.setScale(2, RoundingMode.HALF_UP).toPlainString()) + " L";
     }
 
     private String storePhotoOrReject(org.springframework.web.multipart.MultipartFile photo,
@@ -768,15 +753,6 @@ public class AdminController {
         return (s == null || s.isBlank()) ? "—" : s;
     }
 
-    private String vehicleTypeLabel(String type) {
-        if (type == null) return "—";
-        return switch (type) {
-            case "car" -> "কার";
-            case "truck" -> "ট্রাক";
-            case "bike" -> "বাইক";
-            default -> type;
-        };
-    }
 
     private String vehicleTypeIcon(String type) {
         if (type == null) return "car";
