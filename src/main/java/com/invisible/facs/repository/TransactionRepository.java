@@ -43,6 +43,13 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
     List<Transaction> findTop10ByVehicleUserIdOrderByCreatedAtDesc(Long userId);
 
+    List<Transaction> findTop10ByVehicleIdOrderByCreatedAtDesc(Long vehicleId);
+
+    @Query("SELECT COALESCE(SUM(t.fuelLiters), 0) FROM Transaction t " +
+           "WHERE t.vehicle.id = :vehicleId AND t.status = :status")
+    BigDecimal sumFuelLitersByVehicleIdAndStatus(@Param("vehicleId") Long vehicleId,
+                                                  @Param("status") TransactionStatus status);
+
     @Query("""
             SELECT t.vehicle.id, COALESCE(SUM(t.fuelLiters), 0)
             FROM Transaction t

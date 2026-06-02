@@ -44,15 +44,15 @@
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:text-right">
                             <div>
                                 <p class="text-xs text-gray-500 mb-1">সর্বশেষ ফুয়েলিং</p>
-                                <p class="text-base font-semibold text-gray-900">—</p>
+                                <p class="text-base font-semibold text-gray-900"><c:out value="${vehicle.lastRefueledDisplay}"/></p>
                             </div>
                             <div>
                                 <p class="text-xs text-gray-500 mb-1">মোট ফুয়েল</p>
-                                <p class="text-base font-semibold text-gray-900">—</p>
+                                <p class="text-base font-semibold text-gray-900 tabular-nums"><c:out value="${vehicle.totalLitersDisplay}"/></p>
                             </div>
                             <div>
                                 <p class="text-xs text-gray-500 mb-1">পরবর্তী ফুয়েল নিতে পারবে</p>
-                                <p class="text-base font-semibold text-brand-red">—</p>
+                                <p class="text-base font-semibold ${vehicle.eligibleNow ? 'text-emerald-600' : 'text-brand-red'}"><c:out value="${vehicle.nextEligibleDisplay}"/></p>
                             </div>
                         </div>
                     </div>
@@ -93,6 +93,53 @@
                 </article>
 
             </div>
+
+            <article class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                <header class="flex items-center justify-between gap-3 px-6 py-4 bg-gray-100 border-b border-gray-200">
+                    <div class="flex items-center gap-2">
+                        <span class="text-gray-700 [&>svg]:w-5 [&>svg]:h-5"><my:icon name="receipt"/></span>
+                        <h3 class="text-base font-semibold text-brand">সাম্প্রতিক লেনদেন</h3>
+                    </div>
+                    <a href="<c:url value='/admin/transactions?q=${vehicle.plateNumber}'/>"
+                       class="inline-flex items-center gap-1 text-sm font-semibold text-brand hover:underline">
+                        <span>সবগুলো দেখুন</span>
+                        <my:icon name="chevronRight"/>
+                    </a>
+                </header>
+
+                <my:dataTable
+                    isEmpty="${empty vehicle.recentTransactions}"
+                    emptyMessage="এই যানবাহনের জন্য এখনো কোনো লেনদেন নেই।"
+                    colspan="6"
+                    paginated="false">
+
+                    <jsp:attribute name="header">
+                        <my:dataTableHeadCell label="লেনদেন আইডি" width="w-40"/>
+                        <my:dataTableHeadCell label="তারিখ ও সময়" width="w-56"/>
+                        <my:dataTableHeadCell label="স্টেশন"/>
+                        <my:dataTableHeadCell label="অপারেটর"/>
+                        <my:dataTableHeadCell label="পরিমাণ" width="w-32"/>
+                        <my:dataTableHeadCell label="অবস্থা" align="right" width="w-32"/>
+                    </jsp:attribute>
+
+                    <jsp:body>
+                        <c:forEach items="${vehicle.recentTransactions}" var="t">
+                            <my:dataTableRow>
+                                <my:dataTableBodyCell label="লেনদেন আইডি" tone="brand" bold="true" mono="true" nowrap="true">${t.displayCode}</my:dataTableBodyCell>
+                                <my:dataTableBodyCell label="তারিখ ও সময়" tone="muted" nowrap="true">${t.createdAtDisplay}</my:dataTableBodyCell>
+                                <my:dataTableBodyCell label="স্টেশন"><c:out value="${t.stationName}"/></my:dataTableBodyCell>
+                                <my:dataTableBodyCell label="অপারেটর" tone="muted"><c:out value="${t.operatorName}"/></my:dataTableBodyCell>
+                                <my:dataTableBodyCell label="পরিমাণ" bold="true" mono="true" nowrap="true">${t.amountDisplay}</my:dataTableBodyCell>
+                                <my:dataTableBodyCell label="অবস্থা" align="right" nowrap="true">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${t.statusBadgeClass}">
+                                        <c:out value="${t.statusLabel}"/>
+                                    </span>
+                                </my:dataTableBodyCell>
+                            </my:dataTableRow>
+                        </c:forEach>
+                    </jsp:body>
+                </my:dataTable>
+            </article>
 
         </section>
     </jsp:body>

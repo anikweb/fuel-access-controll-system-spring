@@ -38,6 +38,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.Principal;
@@ -315,6 +316,48 @@ public class AdminController {
         view.put("engineNumber", v.getEngineNumber());
         view.put("plateImageUrl", v.getPlateImagePath());
         view.put("registeredOn", BanglaDateTime.formatDate(v.getCreatedAt()));
+
+        List<Transaction> recent = transactionRepository.findTop10ByVehicleIdOrderByCreatedAtDesc(v.getId());
+
+        Instant lastSuccessAt = null;
+        for (Transaction t : recent) {
+            if (t.getStatus() == TransactionStatus.SUCCESS) { lastSuccessAt = t.getCreatedAt(); break; }
+        }
+        BigDecimal totalLiters = transactionRepository.sumFuelLitersByVehicleIdAndStatus(
+                v.getId(), TransactionStatus.SUCCESS);
+        if (totalLiters == null) totalLiters = BigDecimal.ZERO;
+
+        LocalDate today = LocalDate.now(BanglaDateTime.DHAKA_ZONE);
+        Instant todayStart = today.atStartOfDay(BanglaDateTime.DHAKA_ZONE).toInstant();
+        Instant tomorrowStart = today.plusDays(1).atStartOfDay(BanglaDateTime.DHAKA_ZONE).toInstant();
+        boolean refueledToday = lastSuccessAt != null && !lastSuccessAt.isBefore(todayStart);
+
+        view.put("lastRefueledDisplay", lastSuccessAt == null
+                ? "এখনো কোনো রিফুয়েলিং নেই"
+                : BanglaDateTime.formatRelativeDay(lastSuccessAt));
+        view.put("totalLitersDisplay", TransactionDisplay.formatLitersShort(totalLiters));
+        view.put("nextEligibleDisplay", refueledToday
+                ? BanglaDateTime.formatRelativeDay(tomorrowStart)
+                : "এখনই উপলব্ধ");
+        view.put("eligibleNow", !refueledToday);
+
+        List<Map<String, Object>> recentRows = new ArrayList<>();
+        for (Transaction t : recent) {
+            Map<String, Object> row = new HashMap<>();
+            row.put("id", t.getId());
+            row.put("displayCode", "#" + t.getCode());
+            row.put("createdAtDisplay", BanglaDateTime.formatDateTime(t.getCreatedAt()));
+            row.put("stationName", t.getStation() == null ? "—" : t.getStation().getName());
+            row.put("operatorName", t.getOperator() == null ? "—"
+                    : (t.getOperator().getName() == null || t.getOperator().getName().isBlank()
+                            ? BanglaDigits.formatMobile(t.getOperator().getMobile())
+                            : t.getOperator().getName()));
+            row.put("amountDisplay", TransactionDisplay.formatLitersShort(t.getFuelLiters()));
+            row.put("statusLabel", transactionStatusLabel(t.getStatus()));
+            row.put("statusBadgeClass", TransactionDisplay.statusBadgeClass(t.getStatus()));
+            recentRows.add(row);
+        }
+        view.put("recentTransactions", recentRows);
 
         Map<String, Object> owner = new HashMap<>();
         User u = v.getUser();
