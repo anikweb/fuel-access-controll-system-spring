@@ -84,11 +84,19 @@
 
                 <div class="flex flex-col">
                     <label for="plate" class="mb-1.5 text-[13px] font-semibold text-gray-700">শনাক্তকৃত প্লেট নম্বর</label>
-                    <input id="plate" name="plate" type="text" required
-                           value="<c:out value='${formPlate}'/>"
-                           placeholder="উদা: Dhaka metro ga 31-9957"
-                           class="rounded-lg border border-gray-200 bg-gray-50 px-3.5 py-3 text-base text-gray-900 placeholder-gray-400 focus:outline-none focus:border-brand focus:bg-white focus:ring-2 focus:ring-brand/15"/>
-                    <p class="mt-1.5 text-xs text-gray-500">সিস্টেম স্বয়ংক্রিয় OCR প্রস্তুত হলে এটি স্বয়ংক্রিয়ভাবে পূরণ হবে।</p>
+                    <div class="relative">
+                        <input id="plate" name="plate" type="text" required
+                               value="<c:out value='${formPlate}'/>"
+                               placeholder="উদা: Dhaka metro ga 31-9957"
+                               class="w-full rounded-lg border border-gray-200 bg-gray-50 px-3.5 py-3 text-base text-gray-900 placeholder-gray-400 focus:outline-none focus:border-brand focus:bg-white focus:ring-2 focus:ring-brand/15"
+                               data-plate-input/>
+                        <span id="plateOcrSpinner" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-brand">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" class="animate-spin">
+                                <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                            </svg>
+                        </span>
+                    </div>
+                    <p id="plateOcrStatus" class="mt-1.5 text-xs text-gray-500">ছবি আপলোড করলে সিস্টেম স্বয়ংক্রিয়ভাবে প্লেট নম্বর পূরণ করার চেষ্টা করবে।</p>
                 </div>
 
                 <div class="flex items-center justify-end gap-3 pt-2">
@@ -107,6 +115,62 @@
         </section>
 
         <script src="<c:url value='/js/uploads.js'/>" defer></script>
+        <script>
+            (function () {
+                var photoInput = document.getElementById('photo');
+                var plateInput = document.getElementById('plate');
+                var spinner = document.getElementById('plateOcrSpinner');
+                var status = document.getElementById('plateOcrStatus');
+                var form = plateInput ? plateInput.closest('form') : null;
+                if (!photoInput || !plateInput || !form) return;
+
+                var ocrUrl = '<c:url value="/operator/transactions/ocr-plate"/>';
+                var csrfInput = form.querySelector('input[name="${not empty _csrf ? _csrf.parameterName : "_csrf"}"]');
+                var defaultStatus = status ? status.textContent : '';
+
+                function setStatus(text, cls) {
+                    if (!status) return;
+                    status.textContent = text;
+                    status.className = 'mt-1.5 text-xs ' + (cls || 'text-gray-500');
+                }
+                function setBusy(busy) {
+                    if (!spinner) return;
+                    spinner.classList.toggle('hidden', !busy);
+                }
+
+                photoInput.addEventListener('change', function () {
+                    var file = photoInput.files && photoInput.files[0];
+                    if (!file || !file.type || !file.type.startsWith('image/')) return;
+                    // Don't trample what the operator has already typed.
+                    var existing = plateInput.value.trim();
+                    var data = new FormData();
+                    data.append('photo', file);
+                    if (csrfInput) data.append(csrfInput.name, csrfInput.value);
+
+                    setBusy(true);
+                    setStatus('প্লেট নম্বর পড়া হচ্ছে…', 'text-gray-500');
+                    fetch(ocrUrl, { method: 'POST', body: data, credentials: 'same-origin' })
+                        .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+                        .then(function (json) {
+                            setBusy(false);
+                            if (!json.enabled) {
+                                setStatus(defaultStatus, 'text-gray-500');
+                                return;
+                            }
+                            if (json.plate) {
+                                if (!existing) plateInput.value = json.plate;
+                                setStatus('OCR ফলাফল: ' + json.plate + '। প্রয়োজনে সম্পাদনা করুন।', 'text-emerald-600');
+                            } else {
+                                setStatus('স্বয়ংক্রিয়ভাবে প্লেট পড়া যায়নি — হাতে লিখুন।', 'text-amber-600');
+                            }
+                        })
+                        .catch(function () {
+                            setBusy(false);
+                            setStatus('OCR সেবায় সংযোগ করা যায়নি — হাতে প্লেট নম্বর লিখুন।', 'text-amber-600');
+                        });
+                });
+            })();
+        </script>
     </jsp:body>
 
 </my:panelLayout>

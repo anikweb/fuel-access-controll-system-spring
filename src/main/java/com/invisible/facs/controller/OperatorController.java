@@ -10,6 +10,7 @@ import com.invisible.facs.repository.TransactionRepository;
 import com.invisible.facs.repository.UserRepository;
 import com.invisible.facs.repository.VehicleRepository;
 import com.invisible.facs.service.FileStorageService;
+import com.invisible.facs.service.PlateOcrService;
 import com.invisible.facs.util.BanglaDateTime;
 import com.invisible.facs.util.BanglaDigits;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -54,6 +56,7 @@ public class OperatorController {
     private final TransactionRepository transactionRepository;
     private final VehicleRepository vehicleRepository;
     private final FileStorageService fileStorageService;
+    private final PlateOcrService plateOcrService;
 
     @ModelAttribute
     @Transactional(readOnly = true)
@@ -216,6 +219,16 @@ public class OperatorController {
     @GetMapping("/transactions/new")
     public String newTransaction() {
         return "operator/new-distribution";
+    }
+
+    @PostMapping("/transactions/ocr-plate")
+    @ResponseBody
+    public Map<String, Object> ocrPlate(@RequestParam("photo") MultipartFile photo) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("provider", plateOcrService.providerId());
+        body.put("enabled", plateOcrService.enabled());
+        body.put("plate", plateOcrService.extractPlate(photo).orElse(null));
+        return body;
     }
 
     @PostMapping("/transactions/verify")
