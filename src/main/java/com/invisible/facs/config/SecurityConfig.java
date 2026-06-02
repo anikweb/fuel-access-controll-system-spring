@@ -32,7 +32,7 @@ public class SecurityConfig {
                         .requestMatchers("/", "/forgot-password", "/verify-otp", "/verify-otp/**", "/reset-password", "/reset-password/**", "/signup", "/signup/**", "/css/**", "/js/**", "/img/**", "/uploads/**", "/error", "/favicon.ico").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/operator/**").hasRole("OPERATOR")
-                        .requestMatchers("/dashboard", "/dashboard/**").hasRole("VEHICLE_OWNER")
+                        .requestMatchers("/dashboard", "/dashboard/**", "/transactions", "/transactions/**").hasRole("VEHICLE_OWNER")
                         .anyRequest().authenticated())
                 .csrf(Customizer.withDefaults())
                 .formLogin(form->form

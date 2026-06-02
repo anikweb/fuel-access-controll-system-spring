@@ -24,6 +24,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
                    OR LOWER(v.plateNumber) LIKE LOWER(CONCAT('%', :q, '%')))
               AND (:stationId IS NULL OR s.id = :stationId)
               AND (:operatorId IS NULL OR t.operator.id = :operatorId)
+              AND (:vehicleUserId IS NULL OR v.user.id = :vehicleUserId)
               AND (:status IS NULL OR t.status = :status)
               AND (:fuelType IS NULL OR t.fuelType = :fuelType)
               AND (:fromAt IS NULL OR t.createdAt >= :fromAt)
@@ -33,11 +34,30 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             @Param("q") String q,
             @Param("stationId") Long stationId,
             @Param("operatorId") Long operatorId,
+            @Param("vehicleUserId") Long vehicleUserId,
             @Param("status") TransactionStatus status,
             @Param("fuelType") String fuelType,
             @Param("fromAt") Instant fromAt,
             @Param("toAt") Instant toAt,
             Pageable pageable);
+
+    List<Transaction> findTop10ByVehicleUserIdOrderByCreatedAtDesc(Long userId);
+
+    Optional<Transaction> findFirstByVehicleUserIdAndStatusOrderByCreatedAtDesc(Long userId, TransactionStatus status);
+
+    @Query("""
+            SELECT t.vehicle.id, COALESCE(SUM(t.fuelLiters), 0)
+            FROM Transaction t
+            WHERE t.status = :status
+              AND t.vehicle.user.id = :userId
+              AND t.createdAt >= :fromAt
+              AND t.createdAt < :toAt
+            GROUP BY t.vehicle.id
+            """)
+    List<Object[]> sumLitersByVehicleForUserInRange(@Param("userId") Long userId,
+                                                    @Param("status") TransactionStatus status,
+                                                    @Param("fromAt") Instant fromAt,
+                                                    @Param("toAt") Instant toAt);
 
     @Query("SELECT COUNT(t) FROM Transaction t WHERE t.createdAt >= :fromAt AND t.createdAt < :toAt")
     long countInRange(@Param("fromAt") Instant fromAt, @Param("toAt") Instant toAt);

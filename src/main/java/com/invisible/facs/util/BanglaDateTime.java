@@ -37,4 +37,22 @@ public final class BanglaDateTime {
         if (instant == null) return "—";
         return formatDate(instant) + " | " + formatTime(instant);
     }
+
+    /**
+     * Day-relative format: today/yesterday show the prefix word + time, anything older shows the full date.
+     * Mirrors the Bengali phrasing the dashboards use (e.g. "আজ ০৪:৩০ PM").
+     */
+    public static String formatRelativeDay(Instant instant) {
+        if (instant == null) return "—";
+        LocalDate target = instant.atZone(DHAKA_ZONE).toLocalDate();
+        LocalDate today = LocalDate.now(DHAKA_ZONE);
+        if (target.equals(today)) {
+            return "আজ " + formatTime(instant);
+        }
+        if (target.equals(today.minusDays(1))) {
+            return "গতকাল " + formatTime(instant);
+        }
+        return formatDateTime(instant);
+    }
 }
+

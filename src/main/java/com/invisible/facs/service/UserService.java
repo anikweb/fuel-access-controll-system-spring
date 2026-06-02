@@ -1,9 +1,13 @@
 package com.invisible.facs.service;
 
 import com.invisible.facs.model.OtpPurpose;
+import com.invisible.facs.model.Transaction;
+import com.invisible.facs.model.TransactionStatus;
 import com.invisible.facs.model.User;
 import com.invisible.facs.model.UserProfile;
+import com.invisible.facs.repository.TransactionRepository;
 import com.invisible.facs.repository.UserRepository;
+import com.invisible.facs.util.BanglaDateTime;
 import com.invisible.facs.util.BanglaDigits;
 import com.invisible.facs.util.MobileNumbers;
 import com.invisible.facs.util.PasswordRules;
@@ -17,9 +21,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.security.Principal;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -34,6 +43,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final VehicleRepository vehicleRepository;
+    private final TransactionRepository transactionRepository;
     private final PasswordEncoder passwordEncoder;
     private final OtpService otpService;
 
@@ -52,50 +62,161 @@ public class UserService {
         UserProfile profile = user.getProfile();
         List<Vehicle> vehicles = vehicleRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
 
+        LocalDate today = LocalDate.now(BanglaDateTime.DHAKA_ZONE);
+        Instant monthStart = today.withDayOfMonth(1).atStartOfDay(BanglaDateTime.DHAKA_ZONE).toInstant();
+        Instant monthEnd = today.withDayOfMonth(1).plusMonths(1).atStartOfDay(BanglaDateTime.DHAKA_ZONE).toInstant();
+        Instant todayStart = today.atStartOfDay(BanglaDateTime.DHAKA_ZONE).toInstant();
+        Instant tomorrowStart = today.plusDays(1).atStartOfDay(BanglaDateTime.DHAKA_ZONE).toInstant();
+
+        Map<Long, BigDecimal> usedByVehicle = new HashMap<>();
+        for (Object[] row : transactionRepository.sumLitersByVehicleForUserInRange(
+                user.getId(), TransactionStatus.SUCCESS, monthStart, monthEnd)) {
+            usedByVehicle.put((Long) row[0], (BigDecimal) row[1]);
+        }
+
+        Map<Long, Instant> lastRefueledByVehicle = new LinkedHashMap<>();
+        for (Transaction t : transactionRepository.findTop10ByVehicleUserIdOrderByCreatedAtDesc(user.getId())) {
+            if (t.getStatus() != TransactionStatus.SUCCESS || t.getVehicle() == null) continue;
+            lastRefueledByVehicle.putIfAbsent(t.getVehicle().getId(), t.getCreatedAt());
+        }
+
+        List<Map<String, Object>> vehicleCards = new ArrayList<>();
+        boolean anyEligibleToday = false;
+        Instant aggregateLastRefueled = null;
+        for (Vehicle v : vehicles) {
+            BigDecimal used = usedByVehicle.getOrDefault(v.getId(), BigDecimal.ZERO);
+            BigDecimal quota = v.getMonthlyQuotaLiters() != null ? v.getMonthlyQuotaLiters() : BigDecimal.ZERO;
+            int percentUsed = 0;
+            if (quota.signum() > 0) {
+                percentUsed = used.multiply(BigDecimal.valueOf(100))
+                        .divide(quota, 0, RoundingMode.HALF_UP)
+                        .min(BigDecimal.valueOf(100))
+                        .intValueExact();
+            }
+            Instant lastRefueled = lastRefueledByVehicle.get(v.getId());
+            boolean refueledToday = lastRefueled != null && !lastRefueled.isBefore(todayStart);
+            if (!refueledToday) anyEligibleToday = true;
+            if (lastRefueled != null && (aggregateLastRefueled == null || lastRefueled.isAfter(aggregateLastRefueled))) {
+                aggregateLastRefueled = lastRefueled;
+            }
+
+            Map<String, Object> card = new HashMap<>();
+            card.put("plateNumber", v.getPlateNumber());
+            card.put("plateDisplay", BanglaDigits.convert(v.getPlateNumber()));
+            card.put("brand", v.getBrand());
+            card.put("model", v.getModel());
+            card.put("type", vehicleTypeLabel(v.getVehicleType()));
+            card.put("color", v.getColor());
+            card.put("year", v.getManufactureYear());
+            card.put("plateImageUrl", v.getPlateImagePath());
+            card.put("quotaDisplay", formatLiters(quota));
+            card.put("usedDisplay", formatLiters(used));
+            card.put("percentUsed", percentUsed);
+            card.put("percentUsedDisplay", BanglaDigits.convert(String.valueOf(percentUsed)) + "%");
+            vehicleCards.add(card);
+        }
+
+        Map<String, Object> eligibility = new HashMap<>();
+        eligibility.put("hasVehicles", !vehicles.isEmpty());
+        eligibility.put("eligible", anyEligibleToday);
+        eligibility.put("badgeLabel", anyEligibleToday ? "যোগ্য" : "আজকের কোটা শেষ");
+        eligibility.put("badgeClass", anyEligibleToday
+                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                : "bg-amber-50 text-amber-700 border-amber-200");
+        eligibility.put("lastRefueledDisplay", aggregateLastRefueled == null
+                ? "এখনো কোনো রিফুয়েলিং নেই"
+                : BanglaDateTime.formatRelativeDay(aggregateLastRefueled));
+        eligibility.put("nextEligibleDisplay", anyEligibleToday
+                ? "এখনই উপলব্ধ"
+                : BanglaDateTime.formatRelativeDay(tomorrowStart));
+
+        List<Map<String, Object>> recentRows = new ArrayList<>();
+        for (Transaction t : transactionRepository.findTop10ByVehicleUserIdOrderByCreatedAtDesc(user.getId())) {
+            Map<String, Object> row = new HashMap<>();
+            row.put("id", t.getId());
+            row.put("displayCode", "#" + t.getCode());
+            row.put("createdAtDisplay", BanglaDateTime.formatDateTime(t.getCreatedAt()));
+            row.put("stationName", t.getStation() == null ? "—" : t.getStation().getName());
+            row.put("amountDisplay", formatLitersShort(t.getFuelLiters()));
+            row.put("statusLabel", transactionStatusLabel(t.getStatus()));
+            row.put("statusBadgeClass", transactionStatusBadge(t.getStatus()));
+            recentRows.add(row);
+        }
+
         Map<String, Object> profileCard = null;
         if (profile != null) {
             profileCard = new HashMap<>();
             profileCard.put("photoUrl", profile.getPhotoPath());
             profileCard.put("name", profile.getName());
-            profileCard.put("nidNumber", profile.getNidNumber());
-            profileCard.put("licenseNumber", profile.getLicenseNumber());
-            profileCard.put("district", profile.getDistrict());
-            profileCard.put("subDistrict", profile.getSubDistrict());
-            profileCard.put("address", profile.getAddress());
-            profileCard.put("licenseFrontUrl", profile.getLicenseFrontPath());
-            profileCard.put("licenseBackUrl", profile.getLicenseBackPath());
         }
 
-        List<Map<String, String>> vehicleCards = new ArrayList<>();
-        for (Vehicle v : vehicles) {
-            Map<String, String> card = new HashMap<>();
-            card.put("plateNumber", v.getPlateNumber());
-            card.put("brand", v.getBrand());
-            card.put("model", v.getModel());
-            card.put("type", v.getVehicleType());
-            card.put("color", v.getColor());
-            card.put("year", v.getManufactureYear());
-            card.put("plateImageUrl", v.getPlateImagePath());
-            vehicleCards.add(card);
-        }
-
-        String displayName;
-        if (profile != null && profile.getName() != null && !profile.getName().isBlank()) {
-            displayName = profile.getName();
-        } else if (user.getName() != null) {
-            displayName = user.getName();
-        } else {
-            displayName = user.getMobile();
-        }
+        String displayName = resolveDisplayName(user);
 
         Map<String, Object> view = new HashMap<>();
         view.put("displayName", displayName);
         view.put("mobile", BanglaDigits.formatMobile(user.getMobile()));
         view.put("profile", profileCard);
         view.put("vehicles", vehicleCards);
+        view.put("eligibility", eligibility);
+        view.put("recentTransactions", recentRows);
 
         model.addAttribute("view", view);
+        model.addAttribute("userSidebar", buildUserSidebar(user));
         return "user/dashboard";
+    }
+
+    public static Map<String, Object> buildUserSidebar(User user) {
+        UserProfile p = user.getProfile();
+        Map<String, Object> sidebar = new HashMap<>();
+        sidebar.put("photoUrl", p == null ? null : p.getPhotoPath());
+        sidebar.put("name", resolveDisplayName(user));
+        sidebar.put("roleLabel", "গাড়ির মালিক");
+        return sidebar;
+    }
+
+    private static String resolveDisplayName(User user) {
+        UserProfile p = user.getProfile();
+        if (p != null && p.getName() != null && !p.getName().isBlank()) return p.getName();
+        if (user.getName() != null && !user.getName().isBlank()) return user.getName();
+        return user.getMobile();
+    }
+
+    private static String formatLiters(BigDecimal liters) {
+        if (liters == null) return "০ লিটার";
+        return BanglaDigits.convert(liters.setScale(2, RoundingMode.HALF_UP).toPlainString()) + " লিটার";
+    }
+
+    private static String formatLitersShort(BigDecimal liters) {
+        if (liters == null) return "—";
+        return BanglaDigits.convert(liters.setScale(2, RoundingMode.HALF_UP).toPlainString()) + " L";
+    }
+
+    private static String vehicleTypeLabel(String type) {
+        if (type == null) return "—";
+        return switch (type) {
+            case "car" -> "কার";
+            case "truck" -> "ট্রাক";
+            case "bike" -> "বাইক";
+            default -> type;
+        };
+    }
+
+    private static String transactionStatusLabel(TransactionStatus status) {
+        if (status == null) return "—";
+        return switch (status) {
+            case SUCCESS -> "সফল";
+            case PENDING -> "অপেক্ষমান";
+            case CANCELLED -> "বাতিল";
+        };
+    }
+
+    private static String transactionStatusBadge(TransactionStatus status) {
+        if (status == null) return "bg-gray-100 text-gray-700";
+        return switch (status) {
+            case SUCCESS -> "bg-brand text-white";
+            case PENDING -> "bg-amber-400 text-amber-950";
+            case CANCELLED -> "bg-brand-red text-white";
+        };
     }
 
     public String requestPasswordReset(String rawMobile, HttpSession session) {

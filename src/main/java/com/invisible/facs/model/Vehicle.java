@@ -20,6 +20,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.Instant;
 
 @Entity
@@ -78,11 +79,16 @@ public class Vehicle implements Serializable {
     @Column(name = "plate_image_path", length = 255)
     private String plateImagePath;
 
+    @Column(name = "monthly_quota_liters", precision = 8, scale = 2, nullable = false,
+            columnDefinition = "DECIMAL(8,2) DEFAULT 60.00")
+    private BigDecimal monthlyQuotaLiters;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
     @PrePersist
     void onCreate() {
         if (createdAt == null) createdAt = Instant.now();
+        if (monthlyQuotaLiters == null) monthlyQuotaLiters = new BigDecimal("60.00");
     }
 }

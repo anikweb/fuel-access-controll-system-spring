@@ -590,7 +590,7 @@ public class AdminController {
 
         int safePage = Math.max(page, 0);
         Page<Transaction> result = transactionRepository.findWithFilters(
-                trimmedQ, stationId, null, filterStatus, null, fromAt, toAt,
+                trimmedQ, stationId, null, null, filterStatus, null, fromAt, toAt,
                 PageRequest.of(safePage, TRANSACTIONS_PAGE_SIZE, Sort.by(Sort.Direction.DESC, "id")));
 
         List<Map<String, Object>> rows = new ArrayList<>();

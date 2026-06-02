@@ -163,7 +163,7 @@ public class OperatorController {
 
         int safePage = Math.max(page, 0);
         Page<Transaction> result = transactionRepository.findWithFilters(
-                trimmedQ, null, operator.getId(), filterStatus, filterFuelType, fromAt, toAt,
+                trimmedQ, null, operator.getId(), null, filterStatus, filterFuelType, fromAt, toAt,
                 PageRequest.of(safePage, TRANSACTIONS_PAGE_SIZE, Sort.by(Sort.Direction.DESC, "id")));
 
         List<Map<String, Object>> rows = new ArrayList<>();
