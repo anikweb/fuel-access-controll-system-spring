@@ -62,13 +62,13 @@
                 <article class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
                     <p class="text-[13px] font-semibold text-gray-500">ক্যাপচার করা ছবি</p>
 
-                    <div class="mt-4 rounded-lg overflow-hidden bg-gray-100 aspect-[4/3] flex items-center justify-center">
+                    <div class="mt-4 rounded-lg overflow-hidden bg-gray-100 aspect-[3/1] flex items-center justify-center">
                         <c:choose>
                             <c:when test="${not empty view.capturedPhotoUrl}">
-                                <img id="capturedPhotoImg" src="<c:out value='${view.capturedPhotoUrl}'/>" alt="" class="w-full h-full object-cover"/>
+                                <img id="capturedPhotoImg" src="<c:out value='${view.capturedPhotoUrl}'/>" alt="" class="w-full h-full object-contain"/>
                             </c:when>
                             <c:otherwise>
-                                <img id="capturedPhotoImg" alt="" class="w-full h-full object-cover hidden"/>
+                                <img id="capturedPhotoImg" alt="" class="w-full h-full object-contain hidden"/>
                                 <span id="capturedPhotoPlaceholder" class="text-gray-400 text-xs">কোনো ছবি আপলোড করা হয়নি</span>
                             </c:otherwise>
                         </c:choose>
@@ -166,6 +166,7 @@
             </div>
         </form>
 
+        <script src="<c:url value='/js/uploads.js'/>" defer></script>
         <script>
             (function () {
                 var trigger = document.getElementById('retake-trigger');
@@ -173,7 +174,10 @@
                 var img = document.getElementById('capturedPhotoImg');
                 var placeholder = document.getElementById('capturedPhotoPlaceholder');
                 if (!trigger || !input || !img) return;
-                trigger.addEventListener('click', function () { input.click(); });
+                trigger.addEventListener('click', function () {
+                    if (window.openImagePicker) window.openImagePicker(input);
+                    else input.click();
+                });
                 input.addEventListener('change', function () {
                     var file = input.files && input.files[0];
                     if (!file) return;

@@ -1,5 +1,6 @@
 <%@ tag pageEncoding="UTF-8" trimDirectiveWhitespaces="true" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="my" tagdir="/WEB-INF/tags" %>
 <%@ attribute name="title" required="false" %>
 <!DOCTYPE html>
 <html lang="bn">
@@ -28,6 +29,8 @@
 <footer class="border-t border-gray-200 bg-white text-gray-500 text-sm flex items-center justify-center px-6 py-4 text-center">
     <small>© ২০২৬ ফুয়েল এক্সেস কন্ট্রোল সিস্টেম - সর্বস্বত্ব সংরক্ষিত</small>
 </footer>
+
+<my:imagePickerModal/>
 
 </body>
 </html>

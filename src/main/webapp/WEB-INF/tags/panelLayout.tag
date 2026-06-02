@@ -72,6 +72,8 @@
     </div>
 </div>
 
+<my:imagePickerModal/>
+
 <script>
     (function () {
         var btn = document.getElementById('sidebarToggle');
