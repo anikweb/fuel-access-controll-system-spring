@@ -14,6 +14,7 @@ import com.invisible.facs.repository.TransactionRepository;
 import com.invisible.facs.repository.UserRepository;
 import com.invisible.facs.repository.VehicleRepository;
 import com.invisible.facs.service.FileStorageService;
+import com.invisible.facs.util.BanglaDateTime;
 import com.invisible.facs.util.BanglaDigits;
 import com.invisible.facs.util.MobileNumbers;
 import com.invisible.facs.util.PasswordRules;
@@ -44,8 +45,6 @@ import java.security.Principal;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -74,12 +73,6 @@ public class AdminController {
             "bg-emerald-50 text-emerald-700",
             "bg-gray-200 text-gray-800"
     };
-    private static final String[] BANGLA_MONTHS = {
-            "জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন",
-            "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"
-    };
-    private static final ZoneId DHAKA_ZONE = ZoneId.of("Asia/Dhaka");
-
     private final UserRepository userRepository;
     private final VehicleRepository vehicleRepository;
     private final StationRepository stationRepository;
@@ -93,9 +86,9 @@ public class AdminController {
         long users = userRepository.countByRole(Role.VEHICLE_OWNER);
         long vehicles = vehicleRepository.count();
 
-        LocalDate today = LocalDate.now(DHAKA_ZONE);
-        Instant todayStart = today.atStartOfDay(DHAKA_ZONE).toInstant();
-        Instant tomorrowStart = today.plusDays(1).atStartOfDay(DHAKA_ZONE).toInstant();
+        LocalDate today = LocalDate.now(BanglaDateTime.DHAKA_ZONE);
+        Instant todayStart = today.atStartOfDay(BanglaDateTime.DHAKA_ZONE).toInstant();
+        Instant tomorrowStart = today.plusDays(1).atStartOfDay(BanglaDateTime.DHAKA_ZONE).toInstant();
         long todayTxns = transactionRepository.countInRange(todayStart, tomorrowStart);
 
         Page<Transaction> recent = transactionRepository.findAll(
@@ -104,7 +97,7 @@ public class AdminController {
         for (Transaction t : recent.getContent()) {
             Map<String, String> row = new HashMap<>();
             row.put("id", t.getCode());
-            row.put("when", formatBanglaDateTime(t.getCreatedAt()));
+            row.put("when", BanglaDateTime.formatDateTime(t.getCreatedAt()));
             row.put("vehicle", t.getVehicle() == null ? "—" : t.getVehicle().getPlateNumber());
             row.put("station", t.getStation() == null ? "—" : t.getStation().getName());
             row.put("qty", formatFuelLiters(t.getFuelLiters()));
@@ -322,7 +315,7 @@ public class AdminController {
         view.put("chassisNumber", v.getChassisNumber());
         view.put("engineNumber", v.getEngineNumber());
         view.put("plateImageUrl", v.getPlateImagePath());
-        view.put("registeredOn", formatBanglaDate(v.getCreatedAt()));
+        view.put("registeredOn", BanglaDateTime.formatDate(v.getCreatedAt()));
 
         Map<String, Object> owner = new HashMap<>();
         User u = v.getUser();
@@ -380,7 +373,7 @@ public class AdminController {
             row.put("mobile", BanglaDigits.formatMobile(u.getMobile()));
             row.put("roleLabel", roleLabel(u.getRole()));
             row.put("roleBadgeClass", roleBadgeClass(u.getRole()));
-            row.put("registeredOn", formatBanglaDate(u.getCreatedAt()));
+            row.put("registeredOn", BanglaDateTime.formatDate(u.getCreatedAt()));
             rows.add(row);
         }
 
@@ -581,8 +574,8 @@ public class AdminController {
         if (date != null && !date.isBlank()) {
             try {
                 LocalDate filterDate = LocalDate.parse(date);
-                fromAt = filterDate.atStartOfDay(DHAKA_ZONE).toInstant();
-                toAt = filterDate.plusDays(1).atStartOfDay(DHAKA_ZONE).toInstant();
+                fromAt = filterDate.atStartOfDay(BanglaDateTime.DHAKA_ZONE).toInstant();
+                toAt = filterDate.plusDays(1).atStartOfDay(BanglaDateTime.DHAKA_ZONE).toInstant();
             } catch (DateTimeParseException ignored) {
             }
         }
@@ -597,7 +590,7 @@ public class AdminController {
 
         int safePage = Math.max(page, 0);
         Page<Transaction> result = transactionRepository.findWithFilters(
-                trimmedQ, stationId, filterStatus, fromAt, toAt,
+                trimmedQ, stationId, null, filterStatus, null, fromAt, toAt,
                 PageRequest.of(safePage, TRANSACTIONS_PAGE_SIZE, Sort.by(Sort.Direction.DESC, "id")));
 
         List<Map<String, Object>> rows = new ArrayList<>();
@@ -605,7 +598,7 @@ public class AdminController {
             Map<String, Object> row = new HashMap<>();
             row.put("id", t.getId());
             row.put("displayCode", "#" + t.getCode());
-            row.put("createdAtDisplay", formatBanglaDateTime(t.getCreatedAt()));
+            row.put("createdAtDisplay", BanglaDateTime.formatDateTime(t.getCreatedAt()));
             row.put("vehiclePlate", t.getVehicle() == null ? null : t.getVehicle().getPlateNumber());
             row.put("stationName", t.getStation() == null ? null : t.getStation().getName());
             row.put("amountDisplay", formatFuelLiters(t.getFuelLiters()));
@@ -667,20 +660,6 @@ public class AdminController {
     private String formatFuelLiters(BigDecimal liters) {
         if (liters == null) return "—";
         return BanglaDigits.convert(liters.setScale(2, RoundingMode.HALF_UP).toPlainString()) + " L";
-    }
-
-    private String formatBanglaDateTime(Instant instant) {
-        if (instant == null) return null;
-        ZonedDateTime zdt = instant.atZone(DHAKA_ZONE);
-        String day = BanglaDigits.convert(String.valueOf(zdt.getDayOfMonth()));
-        String month = BANGLA_MONTHS[zdt.getMonthValue() - 1];
-        String year = BanglaDigits.convert(String.valueOf(zdt.getYear()));
-        int hour = zdt.getHour();
-        String ampm = hour < 12 ? "AM" : "PM";
-        int hour12 = hour % 12 == 0 ? 12 : hour % 12;
-        String hourStr = BanglaDigits.convert(String.format("%02d", hour12));
-        String minStr = BanglaDigits.convert(String.format("%02d", zdt.getMinute()));
-        return day + " " + month + ", " + year + " | " + hourStr + ":" + minStr + " " + ampm;
     }
 
     private String storePhotoOrReject(org.springframework.web.multipart.MultipartFile photo,
@@ -818,14 +797,6 @@ public class AdminController {
             return user.getName();
         }
         return BanglaDigits.formatMobile(user.getMobile());
-    }
-
-    private String formatBanglaDate(Instant instant) {
-        if (instant == null) return null;
-        LocalDate date = instant.atZone(DHAKA_ZONE).toLocalDate();
-        String day = BanglaDigits.convert(String.valueOf(date.getDayOfMonth()));
-        String year = BanglaDigits.convert(String.valueOf(date.getYear()));
-        return day + " " + BANGLA_MONTHS[date.getMonthValue() - 1] + ", " + year;
     }
 
     private String generateUniqueStationCode() {

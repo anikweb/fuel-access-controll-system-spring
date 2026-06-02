@@ -58,6 +58,9 @@ public class Transaction implements Serializable {
     @Column(name = "fuel_liters", precision = 10, scale = 2)
     private BigDecimal fuelLiters;
 
+    @Column(name = "fuel_type", length = 16)
+    private String fuelType;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 16, nullable = false)
     private TransactionStatus status;

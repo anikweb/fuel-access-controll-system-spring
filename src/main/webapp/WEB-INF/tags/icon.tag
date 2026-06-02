@@ -49,14 +49,6 @@
             <path d="M20 6 9 17l-5-5"/>
         </svg>
     </c:when>
-    <c:when test="${name eq 'lockReset'}">
-        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <rect x="5" y="11" width="14" height="10" rx="2"/>
-            <path d="M8 11V8a4 4 0 0 1 7.6-1.7"/>
-            <polyline points="15.6 3.6 15.6 6.6 12.6 6.6"/>
-            <circle cx="12" cy="16" r="1"/>
-        </svg>
-    </c:when>
     <c:when test="${name eq 'target'}">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="12" cy="12" r="9"/>
@@ -216,6 +208,56 @@
             <circle cx="12" cy="12" r="2.5"/>
             <path d="M5 9v.01"/>
             <path d="M19 15v.01"/>
+        </svg>
+    </c:when>
+    <c:when test="${name eq 'fuelPump'}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 22V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v17"/>
+            <path d="M3 22h11"/>
+            <path d="M6 8h5"/>
+            <path d="M14 12h2a2 2 0 0 1 2 2v3a1.5 1.5 0 0 0 3 0V9l-3-3"/>
+        </svg>
+    </c:when>
+    <c:when test="${name eq 'checkCircle'}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="m8 12 3 3 5-6"/>
+        </svg>
+    </c:when>
+    <c:when test="${name eq 'shieldAlert'}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 2 4 5v7c0 5 3.6 8.6 8 10 4.4-1.4 8-5 8-10V5l-8-3z"/>
+            <line x1="12" y1="8" x2="12" y2="13"/>
+            <circle cx="12" cy="16" r="0.6" fill="currentColor"/>
+        </svg>
+    </c:when>
+    <c:when test="${name eq 'xCircle'}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="15" y1="9" x2="9" y2="15"/>
+            <line x1="9" y1="9" x2="15" y2="15"/>
+        </svg>
+    </c:when>
+    <c:when test="${name eq 'calendar'}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="5" width="18" height="16" rx="2"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+            <line x1="8" y1="3" x2="8" y2="7"/>
+            <line x1="16" y1="3" x2="16" y2="7"/>
+        </svg>
+    </c:when>
+    <c:when test="${name eq 'refresh'}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="21 4 21 10 15 10"/>
+            <polyline points="3 20 3 14 9 14"/>
+            <path d="M20 14a8 8 0 0 1-15 3l-2 -3"/>
+            <path d="M4 10a8 8 0 0 1 15 -3l2 3"/>
+        </svg>
+    </c:when>
+    <c:when test="${name eq 'x'}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
         </svg>
     </c:when>
 </c:choose>

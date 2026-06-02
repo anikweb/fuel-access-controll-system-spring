@@ -8,7 +8,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
 
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
 
@@ -20,18 +23,35 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
                    OR LOWER(t.code) LIKE LOWER(CONCAT('%', :q, '%'))
                    OR LOWER(v.plateNumber) LIKE LOWER(CONCAT('%', :q, '%')))
               AND (:stationId IS NULL OR s.id = :stationId)
+              AND (:operatorId IS NULL OR t.operator.id = :operatorId)
               AND (:status IS NULL OR t.status = :status)
+              AND (:fuelType IS NULL OR t.fuelType = :fuelType)
               AND (:fromAt IS NULL OR t.createdAt >= :fromAt)
               AND (:toAt IS NULL OR t.createdAt < :toAt)
             """)
     Page<Transaction> findWithFilters(
             @Param("q") String q,
             @Param("stationId") Long stationId,
+            @Param("operatorId") Long operatorId,
             @Param("status") TransactionStatus status,
+            @Param("fuelType") String fuelType,
             @Param("fromAt") Instant fromAt,
             @Param("toAt") Instant toAt,
             Pageable pageable);
 
     @Query("SELECT COUNT(t) FROM Transaction t WHERE t.createdAt >= :fromAt AND t.createdAt < :toAt")
     long countInRange(@Param("fromAt") Instant fromAt, @Param("toAt") Instant toAt);
+
+    long countByOperatorIdAndStatus(Long operatorId, TransactionStatus status);
+
+    @Query("SELECT COALESCE(SUM(t.fuelLiters), 0) FROM Transaction t " +
+           "WHERE t.operator.id = :operatorId AND t.status = :status")
+    BigDecimal sumFuelLitersByOperatorIdAndStatus(@Param("operatorId") Long operatorId,
+                                                   @Param("status") TransactionStatus status);
+
+    List<Transaction> findTop10ByOperatorIdOrderByCreatedAtDesc(Long operatorId);
+
+    Optional<Transaction> findFirstByVehicleIdOrderByCreatedAtDesc(Long vehicleId);
+
+    boolean existsByCode(String code);
 }

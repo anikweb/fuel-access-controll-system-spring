@@ -33,12 +33,12 @@
 </header>
 
 <div class="flex flex-1 min-h-0">
-    <aside class="w-60 sm:w-64 bg-white border-r border-gray-200 flex flex-col shrink-0">
-        <nav class="flex-1 px-3 py-4 flex flex-col gap-1">
+    <aside class="w-64 sm:w-72 bg-white border-r border-gray-200 flex flex-col shrink-0">
+        <nav class="flex-1 px-4 py-5 flex flex-col gap-3">
             <jsp:invoke fragment="sidebar"/>
         </nav>
         <c:if test="${not empty sidebarFooter}">
-            <div class="px-3 py-4 border-t border-gray-100 flex flex-col gap-1">
+            <div class="px-4 py-4 border-t border-gray-100 flex flex-col gap-1">
                 <jsp:invoke fragment="sidebarFooter"/>
             </div>
         </c:if>
