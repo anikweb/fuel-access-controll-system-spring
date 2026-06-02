@@ -12,7 +12,7 @@
     <title>${empty title ? 'FACS' : title}</title>
     <link rel="stylesheet" href="<c:url value='/css/app.css'/>">
 </head>
-<body class="min-h-screen flex flex-col bg-[#f6f6ef] text-gray-700 antialiased">
+<body class="h-screen flex flex-col overflow-hidden bg-[#f6f6ef] text-gray-700 antialiased">
 
 <header class="h-16 bg-white border-b border-gray-200 flex items-center px-6 sm:px-8 shrink-0">
     <a href="<c:url value='/'/>" class="inline-flex items-center" aria-label="FACS">
@@ -33,22 +33,22 @@
 </header>
 
 <div class="flex flex-1 min-h-0">
-    <aside class="w-64 sm:w-72 bg-white border-r border-gray-200 flex flex-col shrink-0">
-        <nav class="flex-1 px-4 py-5 flex flex-col gap-3">
+    <aside class="w-64 sm:w-72 bg-white border-r border-gray-200 flex flex-col shrink-0 overflow-hidden">
+        <nav class="flex-1 min-h-0 overflow-y-auto px-4 py-5 flex flex-col gap-3">
             <jsp:invoke fragment="sidebar"/>
         </nav>
         <c:if test="${not empty sidebarFooter}">
-            <div class="px-4 py-4 border-t border-gray-100 flex flex-col gap-1">
+            <div class="shrink-0 px-4 py-4 border-t border-gray-100 flex flex-col gap-1">
                 <jsp:invoke fragment="sidebarFooter"/>
             </div>
         </c:if>
     </aside>
 
-    <div class="flex-1 flex flex-col min-w-0">
-        <main class="flex-1 px-6 sm:px-8 py-6 sm:py-8">
+    <div class="flex-1 flex flex-col min-w-0 min-h-0">
+        <main class="flex-1 min-h-0 overflow-y-auto px-6 sm:px-8 py-6 sm:py-8">
             <jsp:doBody/>
         </main>
-        <footer class="px-6 sm:px-8 py-4 text-center text-xs text-gray-500 border-t border-gray-200/70">
+        <footer class="shrink-0 px-6 sm:px-8 py-4 text-center text-xs text-gray-500 border-t border-gray-200/70 bg-white">
             © ২০২৬ ফুয়েল এক্সেস কন্ট্রোল সিস্টেম - সর্বস্বত্ব সংরক্ষিত।
         </footer>
     </div>
