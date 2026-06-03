@@ -9,6 +9,7 @@
         <my:sidebarNavItem href="/admin/transactions" icon="receipt"   label="লেনদেন"/>
         <my:sidebarNavItem href="/admin/vehicles"     icon="truck"     label="যানবাহন" active="true"/>
         <my:sidebarNavItem href="/admin/stations"     icon="terminal"  label="স্টেশন"/>
+        <my:sidebarNavItem href="/admin/settings"     icon="settings"  label="সেটিংস"/>
     </jsp:attribute>
 
     <jsp:attribute name="sidebarFooter">
@@ -26,6 +27,16 @@
                 </a>
                 <h1 class="text-[26px] sm:text-[30px] font-bold text-brand tracking-tight leading-snug">যানবাহনের বিস্তারিত তথ্য</h1>
             </header>
+
+            <c:if test="${not empty vehicleFlash}">
+                <div role="status"
+                     class="rounded-md px-4 py-3 text-sm font-medium
+                            ${vehicleFlashVariant == 'error'
+                              ? 'bg-red-50 text-red-700 border border-red-200'
+                              : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}">
+                    <c:out value="${vehicleFlash}"/>
+                </div>
+            </c:if>
 
             <article class="bg-white border border-gray-200 rounded-xl overflow-hidden">
                 <div class="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6 p-5 sm:p-6 items-center">
@@ -55,6 +66,35 @@
                                 <p class="text-base font-semibold ${vehicle.eligibleNow ? 'text-emerald-600' : 'text-brand-red'}"><c:out value="${vehicle.nextEligibleDisplay}"/></p>
                             </div>
                         </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:text-right border-t border-gray-100 pt-4">
+                            <div>
+                                <p class="text-xs text-gray-500 mb-1 flex items-center gap-1.5 sm:justify-end">
+                                    <span>মাসিক কোটা</span>
+                                    <c:choose>
+                                        <c:when test="${vehicle.quotaOverridden}">
+                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 text-indigo-700">যানবাহন-স্পেসিফিক</span>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-600">গ্লোবাল ডিফল্ট</span>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </p>
+                                <p class="text-base font-semibold text-gray-900 tabular-nums"><c:out value="${vehicle.monthlyQuotaDisplay}"/></p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 mb-1">এই মাসে ব্যবহৃত</p>
+                                <p class="text-base font-semibold text-gray-900 tabular-nums"><c:out value="${vehicle.monthlyUsedDisplay}"/></p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 mb-1">এই মাসে অবশিষ্ট</p>
+                                <p class="text-base font-semibold tabular-nums ${vehicle.eligibleNow ? 'text-emerald-600' : 'text-brand-red'}"><c:out value="${vehicle.monthlyRemainingDisplay}"/></p>
+                            </div>
+                        </div>
+                        <c:if test="${not empty vehicle.eligibilityReason}">
+                            <div class="rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800 text-right">
+                                <c:out value="${vehicle.eligibilityReason}"/>
+                            </div>
+                        </c:if>
                     </div>
                 </div>
             </article>
@@ -139,6 +179,59 @@
                         </c:forEach>
                     </jsp:body>
                 </my:dataTable>
+            </article>
+
+            <article class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                <header class="flex items-center gap-2 px-6 py-4 bg-gray-100 border-b border-gray-200">
+                    <span class="text-gray-700 [&>svg]:w-5 [&>svg]:h-5"><my:icon name="settings"/></span>
+                    <h3 class="text-base font-semibold text-brand">যোগ্যতার সেটিংস (এই যানবাহনের জন্য)</h3>
+                </header>
+
+                <form action="<c:url value='/admin/vehicles/${vehicle.id}/eligibility'/>" method="post" novalidate
+                      class="p-6 flex flex-col gap-6">
+                    <c:if test="${not empty _csrf}">
+                        <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
+                    </c:if>
+
+                    <p class="text-sm text-gray-500">
+                        ব্লাঙ্ক রাখলে গ্লোবাল ডিফল্ট প্রযোজ্য হবে।
+                        গ্লোবাল ডিফল্ট পরিবর্তনের জন্য <a class="text-brand hover:underline font-semibold" href="<c:url value='/admin/settings'/>">সেটিংস পেজ</a> দেখুন।
+                    </p>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div class="flex flex-col">
+                            <my:input id="monthlyQuotaLiters" name="monthlyQuotaLiters" type="number"
+                                      label="মাসিক কোটা (লিটার)"
+                                      leadingIcon="fuelPump"
+                                      placeholder="গ্লোবাল ডিফল্ট ব্যবহার করুন"
+                                      autocomplete="off"
+                                      value="${vehicleEligibility.monthlyQuotaLiters}"
+                                      error="${errors['monthlyQuotaLiters']}"/>
+                            <p class="mt-1.5 text-xs text-gray-500">
+                                গ্লোবাল ডিফল্ট: <span class="font-semibold text-gray-700"><c:out value="${vehicle.globalMonthlyQuotaDisplay}"/></span>
+                            </p>
+                        </div>
+
+                        <div class="flex flex-col">
+                            <my:input id="cooldownHours" name="cooldownHours" type="number"
+                                      label="অপেক্ষমান সময় (ঘণ্টা)"
+                                      leadingIcon="clock"
+                                      placeholder="গ্লোবাল ডিফল্ট ব্যবহার করুন"
+                                      autocomplete="off"
+                                      value="${vehicleEligibility.cooldownHours}"
+                                      error="${errors['cooldownHours']}"/>
+                            <p class="mt-1.5 text-xs text-gray-500">
+                                গ্লোবাল ডিফল্ট: <span class="font-semibold text-gray-700"><c:out value="${vehicle.globalCooldownDisplay}"/></span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end gap-3 border-t border-gray-100 pt-5">
+                        <div class="w-44">
+                            <my:button label="সেটিংস সংরক্ষণ করুন" type="submit"/>
+                        </div>
+                    </div>
+                </form>
             </article>
 
         </section>

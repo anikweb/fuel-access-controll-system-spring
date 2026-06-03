@@ -50,6 +50,17 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     BigDecimal sumFuelLitersByVehicleIdAndStatus(@Param("vehicleId") Long vehicleId,
                                                   @Param("status") TransactionStatus status);
 
+    @Query("SELECT COALESCE(SUM(t.fuelLiters), 0) FROM Transaction t " +
+           "WHERE t.vehicle.id = :vehicleId AND t.status = :status " +
+           "  AND t.createdAt >= :fromAt AND t.createdAt < :toAt")
+    BigDecimal sumFuelLitersByVehicleInRange(@Param("vehicleId") Long vehicleId,
+                                              @Param("status") TransactionStatus status,
+                                              @Param("fromAt") Instant fromAt,
+                                              @Param("toAt") Instant toAt);
+
+    Optional<Transaction> findFirstByVehicleIdAndStatusOrderByCreatedAtDesc(Long vehicleId,
+                                                                            TransactionStatus status);
+
     @Query("""
             SELECT t.vehicle.id, COALESCE(SUM(t.fuelLiters), 0)
             FROM Transaction t

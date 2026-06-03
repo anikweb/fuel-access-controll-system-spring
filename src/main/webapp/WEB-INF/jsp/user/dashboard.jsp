@@ -34,7 +34,12 @@
                     <div class="mt-4 flex flex-col gap-4">
                         <c:forEach items="${view.vehicles}" var="v">
                             <div class="rounded-xl border border-gray-200 px-4 py-3.5 bg-white">
-                                <p class="text-[15px] font-bold text-gray-900 leading-tight"><c:out value="${v.plateDisplay}"/></p>
+                                <div class="flex items-start justify-between gap-2">
+                                    <p class="text-[15px] font-bold text-gray-900 leading-tight"><c:out value="${v.plateDisplay}"/></p>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] font-semibold ${v.badgeClass}">
+                                        <c:out value="${v.badgeLabel}"/>
+                                    </span>
+                                </div>
                                 <p class="mt-2 text-xs text-gray-500">
                                     <span class="font-semibold text-gray-600">ব্র্যান্ড:</span>
                                     <c:out value="${empty v.brand ? '—' : v.brand}"/>
@@ -50,6 +55,10 @@
                                     <div class="h-full bg-brand rounded-full transition-all" style="width: ${v.percentUsed}%"></div>
                                 </div>
                                 <p class="mt-1.5 text-[11px] text-gray-500"><c:out value="${v.usedDisplay}"/> / <c:out value="${v.quotaDisplay}"/></p>
+                                <p class="mt-2 text-[11px] text-gray-500">
+                                    <span class="font-semibold text-gray-600">পরবর্তী রিফুয়েলিং:</span>
+                                    <span class="${v.eligibleNow ? 'text-emerald-600' : 'text-brand-red'} font-semibold"><c:out value="${v.nextEligibleDisplay}"/></span>
+                                </p>
                             </div>
                         </c:forEach>
                     </div>

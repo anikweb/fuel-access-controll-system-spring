@@ -51,11 +51,39 @@
                     <h1 class="text-[26px] sm:text-[28px] font-bold text-brand tracking-tight leading-snug">যানবাহন যাচাইকরণ</h1>
                     <p class="mt-2 text-sm text-gray-500">সিস্টেম স্বয়ংক্রিয়ভাবে লাইসেন্স প্লেট এবং নিবন্ধনের ডেটা নিশ্চিত করেছে।</p>
                 </div>
-                <span class="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 px-4 py-2.5 text-sm font-semibold shadow-sm">
-                    <my:icon name="checkCircle"/>
-                    <span>অনুমোদিত</span>
-                </span>
+                <c:choose>
+                    <c:when test="${view.eligibleNow}">
+                        <span class="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 px-4 py-2.5 text-sm font-semibold shadow-sm">
+                            <my:icon name="checkCircle"/>
+                            <span>যোগ্য — অনুমোদিত</span>
+                        </span>
+                    </c:when>
+                    <c:otherwise>
+                        <span class="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 text-brand-red px-4 py-2.5 text-sm font-semibold shadow-sm">
+                            <my:icon name="shieldAlert"/>
+                            <span>এই মুহূর্তে অযোগ্য</span>
+                        </span>
+                    </c:otherwise>
+                </c:choose>
             </header>
+
+            <c:if test="${not empty view.eligibilityReason}">
+                <div role="status"
+                     class="rounded-md border border-amber-200 bg-amber-50 text-amber-800 px-4 py-3 text-sm font-medium">
+                    <c:out value="${view.eligibilityReason}"/>
+                </div>
+            </c:if>
+
+            <div class="grid grid-cols-2 sm:grid-cols-2 gap-3">
+                <div class="rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm">
+                    <p class="text-xs text-gray-500">মাসিক কোটা</p>
+                    <p class="mt-1 font-semibold text-gray-900 tabular-nums"><c:out value="${view.monthlyQuotaDisplay}"/></p>
+                </div>
+                <div class="rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm">
+                    <p class="text-xs text-gray-500">এই মাসে অবশিষ্ট</p>
+                    <p class="mt-1 font-semibold tabular-nums ${view.eligibleNow ? 'text-emerald-600' : 'text-brand-red'}"><c:out value="${view.monthlyRemainingDisplay}"/></p>
+                </div>
+            </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-[minmax(260px,360px)_minmax(0,1fr)] gap-6 items-start">
 
@@ -155,11 +183,23 @@
                             <my:icon name="x"/>
                             <span>বাতিল</span>
                         </a>
-                        <button type="submit"
-                                class="inline-flex items-center gap-2 rounded-md bg-brand text-white px-5 py-2.5 text-sm font-semibold hover:bg-brand-700 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40">
-                            <my:icon name="fuelPump"/>
-                            <span>জ্বালানি প্রদান করুন</span>
-                        </button>
+                        <c:choose>
+                            <c:when test="${view.eligibleNow}">
+                                <button type="submit"
+                                        class="inline-flex items-center gap-2 rounded-md bg-brand text-white px-5 py-2.5 text-sm font-semibold hover:bg-brand-700 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40">
+                                    <my:icon name="fuelPump"/>
+                                    <span>জ্বালানি প্রদান করুন</span>
+                                </button>
+                            </c:when>
+                            <c:otherwise>
+                                <button type="button" disabled aria-disabled="true"
+                                        title="এই যানবাহন এই মুহূর্তে যোগ্য নয়"
+                                        class="inline-flex items-center gap-2 rounded-md bg-gray-200 text-gray-500 px-5 py-2.5 text-sm font-semibold cursor-not-allowed">
+                                    <my:icon name="fuelPump"/>
+                                    <span>জ্বালানি প্রদান করুন</span>
+                                </button>
+                            </c:otherwise>
+                        </c:choose>
                     </footer>
                 </article>
 

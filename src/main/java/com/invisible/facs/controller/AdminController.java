@@ -1,5 +1,7 @@
 package com.invisible.facs.controller;
 
+import com.invisible.facs.model.EligibilitySettings;
+import com.invisible.facs.model.EligibilitySettingsForm;
 import com.invisible.facs.model.PanelUserForm;
 import com.invisible.facs.model.Role;
 import com.invisible.facs.model.Station;
@@ -9,10 +11,12 @@ import com.invisible.facs.model.TransactionStatus;
 import com.invisible.facs.model.User;
 import com.invisible.facs.model.UserProfile;
 import com.invisible.facs.model.Vehicle;
+import com.invisible.facs.model.VehicleEligibilityForm;
 import com.invisible.facs.repository.StationRepository;
 import com.invisible.facs.repository.TransactionRepository;
 import com.invisible.facs.repository.UserRepository;
 import com.invisible.facs.repository.VehicleRepository;
+import com.invisible.facs.service.EligibilityService;
 import com.invisible.facs.service.FileStorageService;
 import com.invisible.facs.util.BanglaDateTime;
 import com.invisible.facs.util.BanglaDigits;
@@ -79,6 +83,7 @@ public class AdminController {
     private final TransactionRepository transactionRepository;
     private final PasswordEncoder passwordEncoder;
     private final FileStorageService fileStorageService;
+    private final EligibilityService eligibilityService;
 
     @GetMapping({"", "/", "/dashboard"})
     @Transactional(readOnly = true)
@@ -319,27 +324,19 @@ public class AdminController {
 
         List<Transaction> recent = transactionRepository.findTop10ByVehicleIdOrderByCreatedAtDesc(v.getId());
 
-        Instant lastSuccessAt = null;
-        for (Transaction t : recent) {
-            if (t.getStatus() == TransactionStatus.SUCCESS) { lastSuccessAt = t.getCreatedAt(); break; }
-        }
         BigDecimal totalLiters = transactionRepository.sumFuelLitersByVehicleIdAndStatus(
                 v.getId(), TransactionStatus.SUCCESS);
         if (totalLiters == null) totalLiters = BigDecimal.ZERO;
 
-        LocalDate today = LocalDate.now(BanglaDateTime.DHAKA_ZONE);
-        Instant todayStart = today.atStartOfDay(BanglaDateTime.DHAKA_ZONE).toInstant();
-        Instant tomorrowStart = today.plusDays(1).atStartOfDay(BanglaDateTime.DHAKA_ZONE).toInstant();
-        boolean refueledToday = lastSuccessAt != null && !lastSuccessAt.isBefore(todayStart);
-
-        view.put("lastRefueledDisplay", lastSuccessAt == null
-                ? "এখনো কোনো রিফুয়েলিং নেই"
-                : BanglaDateTime.formatRelativeDay(lastSuccessAt));
         view.put("totalLitersDisplay", TransactionDisplay.formatLitersShort(totalLiters));
-        view.put("nextEligibleDisplay", refueledToday
-                ? BanglaDateTime.formatRelativeDay(tomorrowStart)
-                : "এখনই উপলব্ধ");
-        view.put("eligibleNow", !refueledToday);
+        view.putAll(eligibilityService.buildDisplay(v.getId()));
+
+        if (!model.containsAttribute("vehicleEligibility")) {
+            VehicleEligibilityForm eligibilityForm = new VehicleEligibilityForm();
+            eligibilityForm.setMonthlyQuotaLiters(v.getMonthlyQuotaLiters());
+            eligibilityForm.setCooldownHours(v.getCooldownHours());
+            model.addAttribute("vehicleEligibility", eligibilityForm);
+        }
 
         List<Map<String, Object>> recentRows = new ArrayList<>();
         for (Transaction t : recent) {
@@ -377,6 +374,48 @@ public class AdminController {
 
         model.addAttribute("vehicle", view);
         return "admin/vehicleDetail";
+    }
+
+    @PostMapping("/vehicles/{id}/eligibility")
+    public String updateVehicleEligibility(@PathVariable("id") Long id,
+                                           @ModelAttribute("vehicleEligibility") VehicleEligibilityForm form,
+                                           BindingResult bindingResult,
+                                           RedirectAttributes redirectAttributes) {
+        if (form.getMonthlyQuotaLiters() != null) {
+            if (form.getMonthlyQuotaLiters().signum() <= 0) {
+                bindingResult.rejectValue("monthlyQuotaLiters", "positive", "মাসিক কোটা ০ এর বেশি হতে হবে");
+            } else if (form.getMonthlyQuotaLiters().compareTo(new BigDecimal("9999.99")) > 0) {
+                bindingResult.rejectValue("monthlyQuotaLiters", "max", "মাসিক কোটা অনেক বেশি (সর্বোচ্চ ৯৯৯৯.৯৯)");
+            }
+        }
+        if (form.getCooldownHours() != null) {
+            if (form.getCooldownHours() < 0) {
+                bindingResult.rejectValue("cooldownHours", "negative", "ঋণাত্মক হতে পারবে না");
+            } else if (form.getCooldownHours() > 24 * 31) {
+                bindingResult.rejectValue("cooldownHours", "max", "সর্বোচ্চ ৭৪৪ ঘণ্টা (৩১ দিন)");
+            }
+        }
+        if (bindingResult.hasErrors()) {
+            Map<String, String> errors = bindingResult.getFieldErrors().stream()
+                    .collect(Collectors.toMap(FieldError::getField, FieldError::getDefaultMessage, (a, b) -> a));
+            redirectAttributes.addFlashAttribute("vehicleEligibility", form);
+            redirectAttributes.addFlashAttribute("errors", errors);
+            redirectAttributes.addFlashAttribute("vehicleFlash", "সেটিংস সংরক্ষণ করা যায়নি — ইনপুট সংশোধন করুন।");
+            redirectAttributes.addFlashAttribute("vehicleFlashVariant", "error");
+            return "redirect:/admin/vehicles/" + id;
+        }
+        return vehicleRepository.findById(id).map(vehicle -> {
+            vehicle.setMonthlyQuotaLiters(form.getMonthlyQuotaLiters());
+            vehicle.setCooldownHours(form.getCooldownHours());
+            vehicleRepository.save(vehicle);
+            redirectAttributes.addFlashAttribute("vehicleFlash", "যানবাহনের যোগ্যতার সেটিংস আপডেট করা হয়েছে।");
+            redirectAttributes.addFlashAttribute("vehicleFlashVariant", "success");
+            return "redirect:/admin/vehicles/" + id;
+        }).orElseGet(() -> {
+            redirectAttributes.addFlashAttribute("vehicleFlash", "যানবাহনটি খুঁজে পাওয়া যায়নি।");
+            redirectAttributes.addFlashAttribute("vehicleFlashVariant", "error");
+            return "redirect:/admin/vehicles";
+        });
     }
 
     @PostMapping("/vehicles/{id}/delete")
@@ -668,6 +707,51 @@ public class AdminController {
         model.addAttribute("filterStationId", stationId);
         model.addAttribute("filterStatus", status);
         return "admin/transactions";
+    }
+
+    @GetMapping("/settings")
+    public String settings(Model model) {
+        EligibilitySettings current = eligibilityService.getOrCreate();
+        if (!model.containsAttribute("settings")) {
+            EligibilitySettingsForm form = new EligibilitySettingsForm();
+            form.setMonthlyQuotaLiters(current.getMonthlyQuotaLiters());
+            form.setCooldownHours(current.getCooldownHours());
+            model.addAttribute("settings", form);
+        }
+        model.addAttribute("currentUpdatedAtDisplay",
+                current.getUpdatedAt() == null ? "—" : BanglaDateTime.formatDateTime(current.getUpdatedAt()));
+        return "admin/settings";
+    }
+
+    @PostMapping("/settings")
+    public String updateSettings(@Valid @ModelAttribute("settings") EligibilitySettingsForm form,
+                                 BindingResult bindingResult,
+                                 RedirectAttributes redirectAttributes) {
+        if (form.getMonthlyQuotaLiters() == null) {
+            bindingResult.rejectValue("monthlyQuotaLiters", "required", "মাসিক কোটা আবশ্যক");
+        } else if (form.getMonthlyQuotaLiters().signum() <= 0) {
+            bindingResult.rejectValue("monthlyQuotaLiters", "positive", "মাসিক কোটা ০ এর বেশি হতে হবে");
+        } else if (form.getMonthlyQuotaLiters().compareTo(new BigDecimal("9999.99")) > 0) {
+            bindingResult.rejectValue("monthlyQuotaLiters", "max", "মাসিক কোটা অনেক বেশি (সর্বোচ্চ ৯৯৯৯.৯৯)");
+        }
+        if (form.getCooldownHours() == null) {
+            bindingResult.rejectValue("cooldownHours", "required", "যোগ্যতার সময়সীমা আবশ্যক");
+        } else if (form.getCooldownHours() < 0) {
+            bindingResult.rejectValue("cooldownHours", "negative", "ঋণাত্মক হতে পারবে না");
+        } else if (form.getCooldownHours() > 24 * 31) {
+            bindingResult.rejectValue("cooldownHours", "max", "সর্বোচ্চ ৭৪৪ ঘণ্টা (৩১ দিন)");
+        }
+        if (bindingResult.hasErrors()) {
+            Map<String, String> errors = bindingResult.getFieldErrors().stream()
+                    .collect(Collectors.toMap(FieldError::getField, FieldError::getDefaultMessage, (a, b) -> a));
+            redirectAttributes.addFlashAttribute("settings", form);
+            redirectAttributes.addFlashAttribute("errors", errors);
+            return "redirect:/admin/settings";
+        }
+        eligibilityService.save(form.getMonthlyQuotaLiters(), form.getCooldownHours());
+        redirectAttributes.addFlashAttribute("settingsFlash", "যোগ্যতার সেটিংস আপডেট করা হয়েছে।");
+        redirectAttributes.addFlashAttribute("settingsFlashVariant", "success");
+        return "redirect:/admin/settings";
     }
 
     private String buildTransactionsPageUrl(String q, String date, Long stationId, String status) {

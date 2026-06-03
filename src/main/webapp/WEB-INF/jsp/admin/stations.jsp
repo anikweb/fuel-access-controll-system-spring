@@ -9,6 +9,7 @@
         <my:sidebarNavItem href="/admin/transactions" icon="receipt" label="লেনদেন"/>
         <my:sidebarNavItem href="/admin/vehicles"  icon="truck"     label="যানবাহন"/>
         <my:sidebarNavItem href="/admin/stations"  icon="terminal"  label="স্টেশন" active="true"/>
+        <my:sidebarNavItem href="/admin/settings"  icon="settings"  label="সেটিংস"/>
     </jsp:attribute>
 
     <jsp:attribute name="sidebarFooter">

@@ -9,6 +9,7 @@ import com.invisible.facs.model.Vehicle;
 import com.invisible.facs.repository.TransactionRepository;
 import com.invisible.facs.repository.UserRepository;
 import com.invisible.facs.repository.VehicleRepository;
+import com.invisible.facs.service.EligibilityService;
 import com.invisible.facs.service.FileStorageService;
 import com.invisible.facs.service.PlateOcrService;
 import com.invisible.facs.util.BanglaDateTime;
@@ -57,6 +58,7 @@ public class OperatorController {
     private final VehicleRepository vehicleRepository;
     private final FileStorageService fileStorageService;
     private final PlateOcrService plateOcrService;
+    private final EligibilityService eligibilityService;
 
     @ModelAttribute
     @Transactional(readOnly = true)
@@ -273,7 +275,8 @@ public class OperatorController {
         view.put("vehicleId", vehicle.getId());
         view.put("fuelTypeRaw", resolvedFuelType);
         view.put("fuelTypeLabel", fuelTypeLabel(resolvedFuelType));
-        view.put("lastFueledDisplay", lastFueledAt == null ? "—" : BanglaDateTime.formatDate(lastFueledAt));
+        view.put("lastFueledDisplay", lastFueledAt == null ? "—" : BanglaDateTime.formatRelativeDay(lastFueledAt));
+        view.putAll(eligibilityService.buildDisplay(vehicle.getId()));
 
         User owner = vehicle.getUser();
         Map<String, Object> ownerView = new HashMap<>();
@@ -308,6 +311,12 @@ public class OperatorController {
             return "redirect:/operator/transactions/new";
         }
         Vehicle vehicle = vehicleOpt.get();
+
+        EligibilityService.Result eligibility = eligibilityService.check(vehicle.getId());
+        if (!eligibility.eligible()) {
+            ra.addFlashAttribute("error", eligibility.reason());
+            return "redirect:/operator/transactions/new";
+        }
 
         // Save the optional retaken photo; ignored if it fails validation.
         if (photo != null && !photo.isEmpty()) {
@@ -369,6 +378,12 @@ public class OperatorController {
         }
         if (liters == null || liters.signum() <= 0) {
             ra.addFlashAttribute("error", "সঠিক পরিমাণ লিটার দিন।");
+            return "redirect:/operator/transactions/new";
+        }
+
+        EligibilityService.Result eligibility = eligibilityService.check(vehicleId, liters);
+        if (!eligibility.eligible()) {
+            ra.addFlashAttribute("error", eligibility.reason());
             return "redirect:/operator/transactions/new";
         }
 

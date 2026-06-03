@@ -22,14 +22,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.security.Principal;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -47,6 +43,7 @@ public class UserService {
     private final TransactionRepository transactionRepository;
     private final PasswordEncoder passwordEncoder;
     private final OtpService otpService;
+    private final EligibilityService eligibilityService;
 
     @Transactional(readOnly = true)
     public String prepareDashboard(Principal principal, Model model) {
@@ -63,42 +60,21 @@ public class UserService {
         UserProfile profile = user.getProfile();
         List<Vehicle> vehicles = vehicleRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
 
-        LocalDate today = LocalDate.now(BanglaDateTime.DHAKA_ZONE);
-        Instant monthStart = today.withDayOfMonth(1).atStartOfDay(BanglaDateTime.DHAKA_ZONE).toInstant();
-        Instant monthEnd = today.withDayOfMonth(1).plusMonths(1).atStartOfDay(BanglaDateTime.DHAKA_ZONE).toInstant();
-        Instant todayStart = today.atStartOfDay(BanglaDateTime.DHAKA_ZONE).toInstant();
-        Instant tomorrowStart = today.plusDays(1).atStartOfDay(BanglaDateTime.DHAKA_ZONE).toInstant();
-
-        Map<Long, BigDecimal> usedByVehicle = new HashMap<>();
-        for (Object[] row : transactionRepository.sumLitersByVehicleForUserInRange(
-                user.getId(), TransactionStatus.SUCCESS, monthStart, monthEnd)) {
-            usedByVehicle.put((Long) row[0], (BigDecimal) row[1]);
-        }
-
-        Map<Long, Instant> lastRefueledByVehicle = new LinkedHashMap<>();
-        for (Transaction t : transactionRepository.findTop10ByVehicleUserIdOrderByCreatedAtDesc(user.getId())) {
-            if (t.getStatus() != TransactionStatus.SUCCESS || t.getVehicle() == null) continue;
-            lastRefueledByVehicle.putIfAbsent(t.getVehicle().getId(), t.getCreatedAt());
-        }
-
         List<Map<String, Object>> vehicleCards = new ArrayList<>();
-        boolean anyEligibleToday = false;
+        boolean anyEligibleNow = false;
         Instant aggregateLastRefueled = null;
+        Instant earliestNextEligible = null;
         for (Vehicle v : vehicles) {
-            BigDecimal used = usedByVehicle.getOrDefault(v.getId(), BigDecimal.ZERO);
-            BigDecimal quota = v.getMonthlyQuotaLiters() != null ? v.getMonthlyQuotaLiters() : BigDecimal.ZERO;
-            int percentUsed = 0;
-            if (quota.signum() > 0) {
-                percentUsed = used.multiply(BigDecimal.valueOf(100))
-                        .divide(quota, 0, RoundingMode.HALF_UP)
-                        .min(BigDecimal.valueOf(100))
-                        .intValueExact();
+            Map<String, Object> display = eligibilityService.buildDisplay(v.getId());
+            EligibilityService.Result r = (EligibilityService.Result) display.get("raw");
+            if (Boolean.TRUE.equals(display.get("eligibleNow"))) anyEligibleNow = true;
+            if (r.lastSuccessAt() != null
+                    && (aggregateLastRefueled == null || r.lastSuccessAt().isAfter(aggregateLastRefueled))) {
+                aggregateLastRefueled = r.lastSuccessAt();
             }
-            Instant lastRefueled = lastRefueledByVehicle.get(v.getId());
-            boolean refueledToday = lastRefueled != null && !lastRefueled.isBefore(todayStart);
-            if (!refueledToday) anyEligibleToday = true;
-            if (lastRefueled != null && (aggregateLastRefueled == null || lastRefueled.isAfter(aggregateLastRefueled))) {
-                aggregateLastRefueled = lastRefueled;
+            if (r.nextEligibleAt() != null
+                    && (earliestNextEligible == null || r.nextEligibleAt().isBefore(earliestNextEligible))) {
+                earliestNextEligible = r.nextEligibleAt();
             }
 
             Map<String, Object> card = new HashMap<>();
@@ -110,26 +86,33 @@ public class UserService {
             card.put("color", v.getColor());
             card.put("year", v.getManufactureYear());
             card.put("plateImageUrl", v.getPlateImagePath());
-            card.put("quotaDisplay", formatLiters(quota));
-            card.put("usedDisplay", formatLiters(used));
-            card.put("percentUsed", percentUsed);
-            card.put("percentUsedDisplay", BanglaDigits.convert(String.valueOf(percentUsed)) + "%");
+            card.put("quotaDisplay", display.get("monthlyQuotaFullDisplay"));
+            card.put("usedDisplay", display.get("monthlyUsedFullDisplay"));
+            card.put("percentUsed", display.get("percentUsed"));
+            card.put("percentUsedDisplay", display.get("percentUsedDisplay"));
+            card.put("eligibleNow", display.get("eligibleNow"));
+            card.put("badgeLabel", display.get("badgeLabel"));
+            card.put("badgeClass", display.get("badgeClass"));
+            card.put("nextEligibleDisplay", display.get("nextEligibleDisplay"));
+            card.put("eligibilityReason", display.get("eligibilityReason"));
             vehicleCards.add(card);
         }
 
         Map<String, Object> eligibility = new HashMap<>();
         eligibility.put("hasVehicles", !vehicles.isEmpty());
-        eligibility.put("eligible", anyEligibleToday);
-        eligibility.put("badgeLabel", anyEligibleToday ? "যোগ্য" : "আজকের কোটা শেষ");
-        eligibility.put("badgeClass", anyEligibleToday
+        eligibility.put("eligible", anyEligibleNow);
+        eligibility.put("badgeLabel", anyEligibleNow ? "যোগ্য" : "অপেক্ষমান");
+        eligibility.put("badgeClass", anyEligibleNow
                 ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                 : "bg-amber-50 text-amber-700 border-amber-200");
         eligibility.put("lastRefueledDisplay", aggregateLastRefueled == null
                 ? "এখনো কোনো রিফুয়েলিং নেই"
                 : BanglaDateTime.formatRelativeDay(aggregateLastRefueled));
-        eligibility.put("nextEligibleDisplay", anyEligibleToday
+        eligibility.put("nextEligibleDisplay", anyEligibleNow
                 ? "এখনই উপলব্ধ"
-                : BanglaDateTime.formatRelativeDay(tomorrowStart));
+                : (earliestNextEligible != null
+                        ? BanglaDateTime.formatRelativeDay(earliestNextEligible)
+                        : "এই মাসে অনুপলব্ধ"));
 
         List<Map<String, Object>> recentRows = new ArrayList<>();
         for (Transaction t : transactionRepository.findTop10ByVehicleUserIdOrderByCreatedAtDesc(user.getId())) {
@@ -180,11 +163,6 @@ public class UserService {
         if (p != null && p.getName() != null && !p.getName().isBlank()) return p.getName();
         if (user.getName() != null && !user.getName().isBlank()) return user.getName();
         return user.getMobile();
-    }
-
-    private static String formatLiters(BigDecimal liters) {
-        if (liters == null) return "০ লিটার";
-        return BanglaDigits.convert(liters.setScale(2, RoundingMode.HALF_UP).toPlainString()) + " লিটার";
     }
 
     private static String transactionStatusLabel(TransactionStatus status) {
