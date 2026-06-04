@@ -31,7 +31,7 @@
     </label>
 
     <button type="button"
-            class="hidden self-end items-center gap-1.5 rounded-md border border-gray-200 bg-white text-gray-700 px-3 py-1.5 text-xs font-semibold hover:bg-gray-50 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+            class="hidden self-end items-center gap-2 rounded-full bg-brand/10 text-brand px-4 py-2 text-xs font-semibold hover:bg-brand/15 active:scale-[0.97] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30 [&>svg]:w-3.5 [&>svg]:h-3.5"
             data-upload-retake data-for="${id}">
         <my:icon name="refresh"/>
         <span>পুনরায় ছবি তুলুন</span>
