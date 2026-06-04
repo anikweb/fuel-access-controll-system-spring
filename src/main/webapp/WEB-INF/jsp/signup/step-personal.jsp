@@ -35,7 +35,7 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <my:input id="name" name="name" type="text" label="নাম"
-                          placeholder="লাইসেন্স থেকে শনাক্ত হবে"
+                          placeholder="যেমন: রহিম উদ্দিন"
                           autocomplete="name" value="${draft.personal.name}"
                           error="${errors['name']}"/>
                 <my:input id="licenseNumber" name="licenseNumber" type="text" label="ড্রাইভিং লাইসেন্স নম্বর"

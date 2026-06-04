@@ -79,7 +79,7 @@
             </div>
 
             <my:input id="plateNumber" name="plateNumber" type="text" label="প্লেট নম্বর"
-                      placeholder="স্বয়ংক্রিয় ভাবে শনাক্ত হবে" trailingIcon="car"
+                      placeholder="যেমন: ঢাকা মেট্রো-গ ১৫-০৫৬৮" trailingIcon="car"
                       autocomplete="off"
                       value="${draft.vehicle.plateNumber}" error="${errors['plateNumber']}"/>
 
