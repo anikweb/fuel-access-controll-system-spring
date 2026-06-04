@@ -184,7 +184,11 @@
         const placeholder = zone.querySelector('[data-upload-placeholder]');
         const preview = zone.querySelector('[data-upload-preview]');
         const overlay = zone.querySelector('[data-upload-overlay]');
-        const retakeBtn = zone.querySelector('[data-upload-retake]');
+        // Retake button now lives as a sibling of the zone (outside the image frame),
+        // wired to the input via data-for="<input id>". Fall back to the legacy
+        // in-zone lookup so older markup keeps working.
+        const retakeBtn = (input.id && document.querySelector('[data-upload-retake][data-for="' + input.id + '"]'))
+            || zone.querySelector('[data-upload-retake]');
         const label = zone.querySelector('[data-upload-label]');
         if (!input) return;
 

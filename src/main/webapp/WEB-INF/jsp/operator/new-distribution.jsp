@@ -94,16 +94,16 @@
                                         class="hidden absolute inset-0 items-center justify-center bg-black/45 text-white text-sm font-medium opacity-0 group-hover:opacity-100 transition"
                                         data-upload-overlay>ছবি পরিবর্তন করুন</span>
 
-                                    <button type="button"
-                                        class="hidden absolute top-3 right-3 items-center gap-1.5 rounded-md bg-white/95 text-gray-800 px-3 py-1.5 text-xs font-semibold shadow-sm ring-1 ring-gray-200 hover:bg-white transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
-                                        data-upload-retake>
-                                        <my:icon name="refresh" />
-                                        <span>পুনরায় ছবি তুলুন</span>
-                                    </button>
-
                                     <input id="photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp"
                                         class="sr-only" data-upload-input required />
                                 </label>
+
+                                <button type="button"
+                                    class="hidden self-end items-center gap-1.5 rounded-md border border-gray-200 bg-white text-gray-700 px-3 py-1.5 text-xs font-semibold hover:bg-gray-50 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+                                    data-upload-retake data-for="photo">
+                                    <my:icon name="refresh" />
+                                    <span>পুনরায় ছবি তুলুন</span>
+                                </button>
                             </div>
 
                             <div class="flex flex-col">
