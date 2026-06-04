@@ -184,6 +184,7 @@
         const placeholder = zone.querySelector('[data-upload-placeholder]');
         const preview = zone.querySelector('[data-upload-preview]');
         const overlay = zone.querySelector('[data-upload-overlay]');
+        const retakeBtn = zone.querySelector('[data-upload-retake]');
         const label = zone.querySelector('[data-upload-label]');
         if (!input) return;
 
@@ -204,6 +205,17 @@
             }
         });
 
+        if (retakeBtn) {
+            // Stop the click from bubbling to the wrapping <label> (which would also
+            // trigger the picker via the label-intercept). We open the picker explicitly.
+            retakeBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (window.openImagePicker) window.openImagePicker(input);
+                else input.click();
+            });
+        }
+
         function showImagePreview(dataUrl) {
             if (!preview) return;
             preview.src = dataUrl;
@@ -214,6 +226,10 @@
             if (overlay) {
                 overlay.classList.remove('hidden');
                 overlay.classList.add('flex');
+            }
+            if (retakeBtn) {
+                retakeBtn.classList.remove('hidden');
+                retakeBtn.classList.add('inline-flex');
             }
 
             zone.classList.remove('border-dashed', 'hover:bg-gray-100');
@@ -229,6 +245,10 @@
             if (overlay) {
                 overlay.classList.remove('flex');
                 overlay.classList.add('hidden');
+            }
+            if (retakeBtn) {
+                retakeBtn.classList.remove('inline-flex');
+                retakeBtn.classList.add('hidden');
             }
             if (label) label.textContent = originalLabelText;
             zone.classList.add('border-dashed', 'hover:bg-gray-100');

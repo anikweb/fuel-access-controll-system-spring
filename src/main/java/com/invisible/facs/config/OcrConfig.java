@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestClient;
+import tools.jackson.databind.ObjectMapper;
 
 @Slf4j
 @Configuration
@@ -18,7 +19,9 @@ public class OcrConfig {
     }
 
     @Bean
-    public PlateOcrService plateOcrService(OcrProperties props, RestClient ocrRestClient) {
+    public PlateOcrService plateOcrService(OcrProperties props,
+                                           RestClient ocrRestClient,
+                                           ObjectMapper objectMapper) {
         if ("gemini".equalsIgnoreCase(props.getProvider())) {
             if (props.getApiKey() == null || props.getApiKey().isBlank()) {
                 log.warn("facs.ocr.provider=gemini but facs.ocr.api-key is missing — disabling OCR.");
@@ -29,7 +32,7 @@ public class OcrConfig {
                 return new NoopPlateOcrService();
             }
             log.info("OCR provider: gemini ({})", props.getModel());
-            return new GeminiPlateOcrService(props, ocrRestClient);
+            return new GeminiPlateOcrService(props, ocrRestClient, objectMapper);
         }
         log.info("OCR provider: noop (image OCR disabled)");
         return new NoopPlateOcrService();

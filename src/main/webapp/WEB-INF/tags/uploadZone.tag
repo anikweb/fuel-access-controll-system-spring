@@ -25,6 +25,13 @@
     <span class="hidden absolute inset-0 items-center justify-center bg-black/45 text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition"
           data-upload-overlay>পরিবর্তন করুন</span>
 
+    <button type="button"
+            class="hidden absolute top-2 right-2 items-center gap-1.5 rounded-md bg-white/95 text-gray-800 px-3 py-1.5 text-xs font-semibold shadow-sm ring-1 ring-gray-200 hover:bg-white transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+            data-upload-retake>
+        <my:icon name="refresh"/>
+        <span>পুনরায় ছবি তুলুন</span>
+    </button>
+
     <input id="${id}" name="${name}" type="file" accept="${accept}"
            class="sr-only" data-upload-input/>
 </label>
