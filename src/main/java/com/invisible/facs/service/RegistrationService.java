@@ -213,7 +213,7 @@ public class RegistrationService {
             log.info("Signup blocked — mobile already registered: {}", e.getMessage());
             return "redirect:/signup/security?error=duplicate";
         } catch (RuntimeException e) {
-            log.warn("finalizeDraft failed: {}", e.getMessage());
+            log.error("finalizeDraft failed", e);
             return "redirect:/signup/security?error=registrationFailed";
         }
     }

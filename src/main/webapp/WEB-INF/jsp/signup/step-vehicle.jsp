@@ -76,6 +76,7 @@
                 <p class="mb-2 text-[13px] font-medium text-gray-700">রেজিস্ট্রেশন প্লেট এর ছবি আপলোড করুন</p>
                 <my:uploadZone id="plateImage" name="plateImage" label="ফাইল নির্বাচন করুন"
                                helper="PDF, JPG (Max 5MB)" accept="image/*,application/pdf"/>
+                <p id="plateOcrStatus" class="mt-1.5 text-xs text-gray-500">ছবি আপলোড করলে সিস্টেম স্বয়ংক্রিয়ভাবে প্লেট নম্বর পূরণ করার চেষ্টা করবে।</p>
             </div>
 
             <my:input id="plateNumber" name="plateNumber" type="text" label="প্লেট নম্বর"
@@ -90,5 +91,66 @@
     </article>
 
     <script src="<c:url value='/js/uploads.js'/>" defer></script>
+    <script>
+        (function () {
+            var photoInput = document.getElementById('plateImage');
+            var plateInput = document.getElementById('plateNumber');
+            var status = document.getElementById('plateOcrStatus');
+            var form = plateInput ? plateInput.closest('form') : null;
+            if (!photoInput || !plateInput || !form) return;
+
+            var ocrUrl = '<c:url value="/signup/ocr-plate"/>';
+            var csrfInput = form.querySelector('input[name="${not empty _csrf ? _csrf.parameterName : "_csrf"}"]');
+            var defaultStatus = status ? status.textContent : '';
+
+            var plateWrapper = plateInput.parentElement;
+            var trailingIcon = plateWrapper ? plateWrapper.querySelector('span.pr-3') : null;
+            var spinner = document.createElement('span');
+            spinner.className = 'hidden pr-3 flex items-center text-brand';
+            spinner.setAttribute('aria-hidden', 'true');
+            spinner.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" class="animate-spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>';
+            if (plateWrapper) plateWrapper.appendChild(spinner);
+
+            function setStatus(text, cls) {
+                if (!status) return;
+                status.textContent = text;
+                status.className = 'mt-1.5 text-xs ' + (cls || 'text-gray-500');
+            }
+            function setBusy(busy) {
+                spinner.classList.toggle('hidden', !busy);
+                if (trailingIcon) trailingIcon.classList.toggle('hidden', busy);
+            }
+
+            photoInput.addEventListener('change', function () {
+                var file = photoInput.files && photoInput.files[0];
+                if (!file || !file.type || !file.type.startsWith('image/')) return;
+                var data = new FormData();
+                data.append('photo', file);
+                if (csrfInput) data.append(csrfInput.name, csrfInput.value);
+
+                setBusy(true);
+                setStatus('প্লেট নম্বর পড়া হচ্ছে…', 'text-gray-500');
+                fetch(ocrUrl, { method: 'POST', body: data, credentials: 'same-origin' })
+                    .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+                    .then(function (json) {
+                        setBusy(false);
+                        if (!json.enabled) {
+                            setStatus(defaultStatus, 'text-gray-500');
+                            return;
+                        }
+                        if (json.plate) {
+                            plateInput.value = json.plate;
+                            setStatus('OCR ফলাফল: ' + json.plate + '। প্রয়োজনে সম্পাদনা করুন।', 'text-emerald-600');
+                        } else {
+                            setStatus('স্বয়ংক্রিয়ভাবে প্লেট পড়া যায়নি, হাতে লিখুন।', 'text-amber-600');
+                        }
+                    })
+                    .catch(function () {
+                        setBusy(false);
+                        setStatus('OCR সেবায় সংযোগ করা যায়নি, হাতে প্লেট নম্বর লিখুন।', 'text-amber-600');
+                    });
+            });
+        })();
+    </script>
 </section>
 </my:layout>

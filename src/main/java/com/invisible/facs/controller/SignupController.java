@@ -4,6 +4,7 @@ import com.invisible.facs.config.OtpProperties;
 import com.invisible.facs.model.PersonalInfoForm;
 import com.invisible.facs.model.SecurityForm;
 import com.invisible.facs.model.Vehicle;
+import com.invisible.facs.service.PlateOcrService;
 import com.invisible.facs.service.RegistrationService;
 import com.invisible.facs.util.BanglaDigits;
 import jakarta.servlet.http.HttpSession;
@@ -17,7 +18,11 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/signup")
@@ -26,6 +31,7 @@ public class SignupController {
 
     private final RegistrationService registrationService;
     private final OtpProperties otpProperties;
+    private final PlateOcrService plateOcrService;
 
     @GetMapping
     public String start() {
@@ -60,6 +66,16 @@ public class SignupController {
                                 @RequestParam(value = "plateImage", required = false) MultipartFile plateImage,
                                 HttpSession session, Model model) {
         return registrationService.submitVehicle(form, bindingResult, plateImage, session, model);
+    }
+
+    @PostMapping("/ocr-plate")
+    @ResponseBody
+    public Map<String, Object> ocrPlate(@RequestParam("photo") MultipartFile photo) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("provider", plateOcrService.providerId());
+        body.put("enabled", plateOcrService.enabled());
+        body.put("plate", plateOcrService.extractPlate(photo).orElse(null));
+        return body;
     }
 
     @GetMapping("/security")

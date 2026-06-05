@@ -1,7 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" trimDirectiveWhitespaces="true" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="my" tagdir="/WEB-INF/tags" %>
-<my:panelLayout title="যোগ্যতার সেটিংস | FACS অ্যাডমিন">
+<my:panelLayout title="যোগ্যতার সেটিংস | FACS অ্যাডমিন SEU">
 
     <jsp:attribute name="sidebar">
         <my:sidebarNavItem href="/admin/dashboard"    icon="dashboard" label="ড্যাশবোর্ড"/>
